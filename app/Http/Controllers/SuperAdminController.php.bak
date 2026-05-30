@@ -116,15 +116,7 @@ class SuperAdminController extends Controller
     public function cleanData(Request $request) { $action = $request->action; $result_text = ""; if ($action == 'uppercase') { $users = User::all(); foreach ($users as $user) { $user->name = strtoupper($user->name); if($user->curp) $user->curp = strtoupper($user->curp); if($user->rfc) $user->rfc = strtoupper($user->rfc); $user->save(); } $result_text = "Estandarización completada."; } elseif ($action == 'validate_docs') { $no_ine = User::whereNull('ine_path')->count(); $result_text = "Validación: {$no_ine} usuarios sin INE cargado."; } elseif ($action == 'duplicates') { $result_text = "No se encontraron RFCs duplicados."; } return back()->with('clean_result', $result_text); }
     public function ingesta() { return view('superadmin.ingesta'); }
     public function uploadCSV(Request $request) { $request->validate(['csv_file' => 'required|file|mimes:csv,txt']); $path = $request->file('csv_file')->getRealPath(); $file = fopen($path, 'r'); $headers = fgetcsv($file, 1000, ','); $rows = []; $count = 0; while (($data = fgetcsv($file, 1000, ',')) !== FALSE && $count < 5) { $rows[] = $data; $count++; } fclose($file); return back()->with('csv_headers', $headers)->with('csv_preview', $rows); }
-    public function farmacia()
-    {
-        $medications = Medication::orderBy('stock', 'asc')->get();
-        $triages = Triage::whereIn('status', ['En Espera', 'En Atención'])->get();
-        $critical_patients = Triage::where('triage_level', 'Rojo')->whereIn('status', ['En Espera', 'En Atención'])->get();
-        $normal_patients = Triage::whereIn('triage_level', ['Verde', 'Azul'])->whereIn('status', ['En Espera', 'En Atención'])->get();
-        $prescriptions = collect();
-        return view('superadmin.farmacia', compact('medications', 'triages', 'critical_patients', 'normal_patients', 'prescriptions'));
-    }
+    public function farmacia() { $medications = Medication::orderBy('stock', 'asc')->get(); return view('superadmin.farmacia', compact('medications')); }
     public function storeMedication(Request $request) { Medication::create($request->all()); return back(); }
     public function reportPersonal() { $users = User::all(); $pdf = Pdf::loadView('reports.personal', compact('users')); return $pdf->stream('reporte_personal.pdf'); }
     public function reportCamas() { $beds = Bed::orderBy('floor')->get(); $pdf = Pdf::loadView('reports.camas', compact('beds')); return $pdf->stream('reporte_recursos.pdf'); }
