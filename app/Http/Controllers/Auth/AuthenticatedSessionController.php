@@ -23,12 +23,16 @@ class AuthenticatedSessionController extends Controller
 
         $role = $request->user()->role;
 
-        if ($role === 'SuperAdmin' || $role === 'Administrador Hospitalario') {
-            return redirect()->route('superadmin.dashboard');
+        switch ($role) {
+            case 'SuperAdmin':
+            case 'Administrador Hospitalario':
+                return redirect()->route('superadmin.dashboard');
+            case 'Farmacéutico':
+            case 'Admin Farmacia':
+                return redirect()->route('farmacia.dashboard');
+            default:
+                return redirect()->route('superadmin.dashboard');
         }
-
-        // Redirigir al dashboard por defecto mientras creamos los demás
-        return redirect()->route('superadmin.dashboard');
     }
 
     public function destroy(Request $request): RedirectResponse
@@ -36,7 +40,6 @@ class AuthenticatedSessionController extends Controller
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-
         return redirect('/');
     }
 }
