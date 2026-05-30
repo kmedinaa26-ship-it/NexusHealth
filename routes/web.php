@@ -3,43 +3,73 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\PharmacyController;
+use App\Http\Controllers\NurseController;
 
-Route::get('/', function () { return redirect()->route('login'); });
+Route::get('/', function () {
+    return redirect()->route('login');
+});
 
-// FARMACIA
+// ==========================================
+// RUTAS DE ENFERMERIA
+// ==========================================
+Route::middleware(['auth', 'verified', 'role:Enfermera A,Enfermera B,Enfermera C'])->prefix('enfermeria')->name('enfermeria.')->group(function () {
+    Route::get('/dashboard', [NurseController::class, 'dashboard'])->name('dashboard');
+    Route::get('/triage', [NurseController::class, 'triage'])->name('triage');
+    Route::post('/triage', [NurseController::class, 'storeTriage'])->name('storeTriage');
+    Route::get('/signos-vitales', [NurseController::class, 'signosVitales'])->name('signos');
+    Route::post('/signos-vitales', [NurseController::class, 'storeVitals'])->name('storeVitals');
+    Route::get('/pacientes', [NurseController::class, 'pacientes'])->name('pacientes');
+    Route::post('/pacientes/{id}/enviar', [NurseController::class, 'enviarA'])->name('enviarA');
+    Route::put('/pacientes/{id}/reasignar', [NurseController::class, 'reasignarPaciente'])->name('reasignar');
+    Route::put('/pacientes/{id}/alta', [NurseController::class, 'darAlta'])->name('darAlta');
+    Route::get('/hospitalizacion', [NurseController::class, 'hospitalizacion'])->name('hospitalizacion');
+    Route::post('/hospitalizacion', [NurseController::class, 'storeHospitalization'])->name('storeHospitalization');
+    Route::get('/evolucion', [NurseController::class, 'evolucion'])->name('evolucion');
+    Route::post('/evolucion', [NurseController::class, 'storeEvolution'])->name('storeEvolution');
+    Route::get('/alertas', [NurseController::class, 'alertas'])->name('alertas');
+    Route::post('/alertas/{id}/read', [NurseController::class, 'markAlertRead'])->name('markAlertRead');
+    Route::get('/medicamentos', [NurseController::class, 'medicamentos'])->name('medicamentos');
+    Route::get('/documentacion', [NurseController::class, 'documentacion'])->name('documentacion');
+    Route::get('/solicitudes-farmacia', [NurseController::class, 'solicitudesFarmacia'])->name('solicitudesFarmacia');
+    Route::get('/reportes', [NurseController::class, 'reportes'])->name('reportes');
+});
+
+// ==========================================
+// RUTAS DE FARMACIA
+// ==========================================
 Route::middleware(['auth', 'verified', 'role:Farmacéutico,Admin Farmacia'])->prefix('farmacia')->name('farmacia.')->group(function () {
     Route::get('/dashboard', [PharmacyController::class, 'dashboard'])->name('dashboard');
     Route::get('/inventario', [PharmacyController::class, 'inventory'])->name('inventory');
-    Route::post('/inventario', [PharmacyController::class, 'storeMedication'])->name('storeMedication');
+    Route::get('/enfermera-meds', [PharmacyController::class, 'enfermeraMeds'])->name('enfermeraMeds');
     Route::get('/controlados', [PharmacyController::class, 'controlled'])->name('controlled');
-    Route::get('/enfermera', [PharmacyController::class, 'enfermeraMeds'])->name('enfermeraMeds');
+    Route::post('/medicamento', [PharmacyController::class, 'storeMedication'])->name('storeMedication');
     Route::get('/dispensacion', [PharmacyController::class, 'dispensacion'])->name('dispensacion');
     Route::post('/dispensacion', [PharmacyController::class, 'dispenseMedication'])->name('dispense');
-    Route::get('/paciente/{id}/historial', [PharmacyController::class, 'pacienteHistorial'])->name('pacienteHistorial');
     Route::get('/proveedores', [PharmacyController::class, 'proveedores'])->name('proveedores');
-    Route::get('/ordenes', [PharmacyController::class, 'ordenes'])->name('ordenes');
-    Route::get('/ordenes/crear', [PharmacyController::class, 'crearOrden'])->name('crearOrden');
-    Route::post('/ordenes', [PharmacyController::class, 'storeOrden'])->name('storeOrden');
-    Route::post('/ordenes/{id}/recibir', [PharmacyController::class, 'recibirOrden'])->name('recibirOrden');
-    Route::get('/crash-carts', [PharmacyController::class, 'crashCarts'])->name('crashCarts');
-    Route::post('/crash-carts/{id}/check', [PharmacyController::class, 'checkCart'])->name('checkCart');
     Route::get('/movimientos', [PharmacyController::class, 'movimientos'])->name('movimientos');
     Route::get('/anomalias', [PharmacyController::class, 'anomalias'])->name('anomalias');
     Route::get('/consumo', [PharmacyController::class, 'consumo'])->name('consumo');
     Route::get('/desabasto', [PharmacyController::class, 'desabasto'])->name('desabasto');
-    Route::post('/desabasto/request', [PharmacyController::class, 'requestRestock'])->name('requestRestock');
-    Route::post('/desabasto/{id}/approve', [PharmacyController::class, 'approveRestock'])->name('approveRestock');
-    Route::get('/desabasto/{id}/alternatives', [PharmacyController::class, 'getAlternatives'])->name('alternatives');
+    Route::post('/desabasto/solicitar', [PharmacyController::class, 'solicitarReStock'])->name('solicitarReStock');
+    Route::get('/desabasto/{id}/alternativas', [PharmacyController::class, 'alternativas'])->name('alternativas');
+    Route::post('/desabasto/{id}/aprobar', [PharmacyController::class, 'aprobarSolicitud'])->name('aprobarSolicitud');
     Route::get('/exportar', [PharmacyController::class, 'exportar'])->name('exportar');
-    Route::get('/exportar/pdf', [PharmacyController::class, 'exportInventoryPDF'])->name('export.pdf');
-    Route::get('/exportar/csv', [PharmacyController::class, 'exportInventoryCSV'])->name('export.csv');
     Route::get('/carga', [PharmacyController::class, 'carga'])->name('carga');
     Route::post('/carga', [PharmacyController::class, 'uploadCSV'])->name('uploadCSV');
     Route::get('/traspasos', [PharmacyController::class, 'traspasos'])->name('traspasos');
     Route::post('/traspasos', [PharmacyController::class, 'storeTraspaso'])->name('traspaso');
+    Route::get('/ordenes', [PharmacyController::class, 'ordenes'])->name('ordenes');
+    Route::post('/ordenes', [PharmacyController::class, 'storeOrden'])->name('storeOrden');
+    Route::post('/ordenes/{id}/recibir', [PharmacyController::class, 'recibirOrden'])->name('recibirOrden');
+    Route::get('/crash-carts', [PharmacyController::class, 'crashCarts'])->name('crashCarts');
+    Route::post('/crash-carts/{id}/verificar', [PharmacyController::class, 'verificarCart'])->name('verificarCart');
+    Route::get('/interacciones', [PharmacyController::class, 'interacciones'])->name('interacciones');
+    Route::get('/historial-paciente/{id}', [PharmacyController::class, 'historialPaciente'])->name('historialPaciente');
 });
 
-// SUPERADMIN
+// ==========================================
+// RUTAS DE SUPERADMIN
+// ==========================================
 Route::middleware(['auth', 'verified', 'role:SuperAdmin,Administrador Hospitalario'])->prefix('superadmin')->name('superadmin.')->group(function () {
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/personal', [SuperAdminController::class, 'personal'])->name('personal');
@@ -58,6 +88,7 @@ Route::middleware(['auth', 'verified', 'role:SuperAdmin,Administrador Hospitalar
     Route::get('/urgencias/{triage}/pase-salida', [SuperAdminController::class, 'paseSalida'])->name('paseSalida');
     Route::get('/farmacia', [SuperAdminController::class, 'farmacia'])->name('farmacia');
     Route::post('/farmacia/prescribe', [SuperAdminController::class, 'prescribe'])->name('farmacia.prescribe');
+    Route::post('/farmacia', [SuperAdminController::class, 'storeMedication'])->name('storeMedication');
     Route::get('/finanzas/auth', [SuperAdminController::class, 'finanzasAuth'])->name('finanzas.auth');
     Route::post('/finanzas/verify', [SuperAdminController::class, 'finanzasVerify'])->name('finanzas.verify');
     Route::post('/finanzas/lock', [SuperAdminController::class, 'finanzasLock'])->name('finanzas.lock');

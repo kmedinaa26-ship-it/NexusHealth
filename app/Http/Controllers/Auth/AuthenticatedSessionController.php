@@ -30,6 +30,10 @@ class AuthenticatedSessionController extends Controller
             case 'Farmacéutico':
             case 'Admin Farmacia':
                 return redirect()->route('farmacia.dashboard');
+            case 'Enfermera A':
+            case 'Enfermera B':
+            case 'Enfermera C':
+                return redirect()->route('enfermeria.dashboard');
             default:
                 return redirect()->route('superadmin.dashboard');
         }
