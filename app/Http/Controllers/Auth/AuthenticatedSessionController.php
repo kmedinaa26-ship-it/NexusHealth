@@ -28,7 +28,9 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('farmacia.dashboard');
         } elseif (in_array($role, ['Enfermera A', 'Enfermera B', 'Enfermera C'])) {
             return redirect()->route('enfermeria.dashboard');
-        } elseif (in_array($role, ['Médico A', 'Médico B', 'Médico C'])) {
+        } elseif ($role === 'Especialista') {
+            return redirect()->route('medico.especialista.dashboard');
+        } elseif (in_array($role, ['Médico A', 'Médico B', 'Médico C', 'Urgenciólogo'])) {
             return redirect()->route('medico.dashboard');
         }
 

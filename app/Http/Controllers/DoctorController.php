@@ -654,7 +654,7 @@ class DoctorController extends Controller
         $pdf = \PDF::loadView('medico.pdf.reportes', compact('pacientes'));
         return $pdf->download('Reporte_Medico_' . date('Y-m-d') . '.pdf');
     }
-}
+    
 
     public function pacientesHospitalizados() {
         $pacientes = Triage::where('status', 'Hospitalizado')
@@ -683,16 +683,4 @@ class DoctorController extends Controller
         return back()->with('success', "Paciente {$triage->patient_name} aceptado.");
     }
 
-    public function derivarPaciente(Request $request, $id) {
-        $request->validate(['doctor_id' => 'required|exists:users,id']);
-        $triage = Triage::findOrFail($id);
-        $doctor = User::findOrFail($request->doctor_id);
-        $triage->update(['assigned_doctor_id' => $doctor->id]);
-        AuditLog::create([
-            'user_id' => auth()->id(), 'user_name' => auth()->user()->name,
-            'user_role' => auth()->user()->role, 'action' => 'Paciente Derivado',
-            'module' => 'Médico - Hospitalizados', 'ip_address' => $request->ip(),
-            'details' => $triage->patient_name . ' derivado a ' . $doctor->name
-        ]);
-        return back()->with('success', "Paciente derivado a {$doctor->name}.");
-    }
+}

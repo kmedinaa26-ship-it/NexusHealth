@@ -23,7 +23,7 @@ class NurseController extends Controller
         $bedsAvailable = Bed::where('status', 'Disponible')->count();
         $critical = Triage::where('triage_level', 'Rojo')->whereIn('status', ['En Espera', 'En Atención'])->count();
         $alerts = MedicalAlert::where('is_read', 0)->orderBy('created_at', 'desc')->take(5)->get();
-        return view('enfermeria.dashboard', compact('criticalPatients', 'hospitalized', 'bedsAvailable', 'critical', 'alerts'));
+        return view('enfermeria.dashboard', compact('criticalPatients', 'hospitalized', 'bedsAvailable', 'critical', 'alerts'))->with('active', 'dashboard');
     }
 
     public function triage()

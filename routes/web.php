@@ -5,6 +5,8 @@ use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\PharmacyController;
 use App\Http\Controllers\NurseController;
 use App\Http\Controllers\DoctorController;
+use App\Http\Controllers\SpecialistController;
+use App\Http\Controllers\SpecialtyController;
 
 Route::get('/dashboard', function () { return redirect()->route('login'); })->name('dashboard');
 Route::get('/', function () { return redirect()->route('login'); });
@@ -12,7 +14,23 @@ Route::get('/', function () { return redirect()->route('login'); });
 // ==========================================
 // MÉDICO
 // ==========================================
-Route::middleware(['auth', 'verified', 'role:Médico A,Médico B,Médico C'])->prefix('medico')->name('medico.')->group(function () {
+Route::middleware(['auth', 'verified', 'role:Médico A,Médico B,Médico C,Especialista'])->prefix('medico')->name('medico.')->group(function () {
+    Route::get('/especialista', [SpecialistController::class, 'dashboard'])->name('especialista.dashboard');
+    Route::get('/especialista/pacientes', [SpecialistController::class, 'misPacientes']);
+    Route::get('/especialista/hospitalizados', [SpecialistController::class, 'hospitalizados']);
+    Route::get('/especialista/derivaciones', [SpecialistController::class, 'derivaciones']);
+    Route::get('/especialista/reportes', [SpecialistController::class, 'reportes']);
+    Route::get('/especialista/ia-medica', [SpecialistController::class, 'iaMedica']);
+    Route::get('/especialista/medicamentos', [SpecialistController::class, 'medicamentos']);
+    Route::post('/especialista/derivaciones/crear', [SpecialistController::class, 'crearDerivacion']);
+    Route::post('/especialista/derivaciones/{id}/aceptar', [SpecialistController::class, 'aceptarDerivacion']);
+    Route::post('/especialista/derivaciones/{id}/rechazar', [SpecialistController::class, 'rechazarDerivacion']);
+    Route::post('/especialista/derivaciones/{id}/reagendar', [SpecialistController::class, 'reagendarDerivacion']);
+    Route::post('/especialista/aceptar/{id}', [SpecialistController::class, 'aceptarPaciente']);
+    Route::post('/especialista/derivar/{id}', [SpecialistController::class, 'derivarPaciente']);
+    Route::get('/especialidades', [SpecialtyController::class, 'index'])->name('especialidades');
+    Route::get('/especialidades/{id}', [SpecialtyController::class, 'show'])->name('especialidades.show');
+    Route::post('/especialidades/derivar/{patientId}', [SpecialtyController::class, 'derivar'])->name('especialidades.derivar');
     Route::get('/dashboard', [DoctorController::class, 'dashboard'])->name('dashboard');
     Route::get('/seleccionar', [DoctorController::class, 'seleccionar'])->name('seleccionar');
     Route::post('/seleccionar-perfil', [DoctorController::class, 'seleccionarPerfil'])->name('seleccionarPerfil');
@@ -106,10 +124,18 @@ Route::middleware(['auth', 'verified', 'role:Médico A,Médico B,Médico C'])->p
     Route::get('/quirofano', [DoctorController::class, 'quirofano'])->name('quirofano');
     Route::get('/controlados', [DoctorController::class, 'controlados'])->name('controlados');
     Route::get('/ia-medica', [DoctorController::class, 'iaMedica'])->name('iaMedica');
-    Route::get('/hospitalizados', [DoctorController::class, 'pacientesHospitalizados'])->name('hospitalizados');
-    Route::post('/pacientes/{id}/aceptar', [DoctorController::class, 'aceptarPaciente'])->name('aceptarPaciente');
-    Route::post('/pacientes/{id}/derivar', [DoctorController::class, 'derivarPaciente'])->name('derivarPaciente');
-    Route::get('/derivaciones', [DoctorController::class, 'derivaciones'])->name('derivaciones');
+    Route::get('/hospitalizados', [SpecialistController::class, 'hospitalizados']);
+    Route::get('/derivaciones', [SpecialistController::class, 'derivaciones']);
+    Route::get('/ambulancias', [\App\Http\Controllers\AmbulanceController::class, 'index']);
+    Route::post('/ambulancias/despachar', [\App\Http\Controllers\AmbulanceController::class, 'despachar']);
+    Route::post('/ambulancias/{id}/llegada', [\App\Http\Controllers\AmbulanceController::class, 'llegada']);
+    Route::get('/ambulancias/{id}/iot', [\App\Http\Controllers\AmbulanceController::class, 'actualizarIot']);
+    Route::get('/hospital-live', [\App\Http\Controllers\AmbulanceController::class, 'hospitalLive']);
+    Route::get('/pacientes', [SpecialistController::class, 'misPacientes'])->name('especialista.pacientes');
+    Route::post('/derivaciones/crear', [SpecialistController::class, 'crearDerivacion'])->name('especialista.derivaciones.crear');
+    Route::post('/derivaciones/{id}/aceptar', [SpecialistController::class, 'aceptarDerivacion'])->name('especialista.derivaciones.aceptar');
+    Route::post('/derivaciones/{id}/rechazar', [SpecialistController::class, 'rechazarDerivacion'])->name('especialista.derivaciones.rechazar');
+    Route::post('/derivaciones/{id}/reagendar', [SpecialistController::class, 'reagendarDerivacion'])->name('especialista.derivaciones.reagendar');
     Route::get('/derivaciones/{id}/pdf', [DoctorController::class, 'exportDerivacionPDF'])->name('derivacion.pdf');    Route::get('/auditoria/export/pdf', [SuperAdminController::class, 'exportAuditPDF'])->name('auditoria.export.pdf');
     Route::get('/auditoria/export/csv', [SuperAdminController::class, 'exportAuditCSV'])->name('auditoria.export.csv');
     Route::get('/auditoria/export/json', [SuperAdminController::class, 'exportAuditJSON'])->name('auditoria.export.json');
@@ -220,7 +246,7 @@ Route::middleware(['auth', 'verified', 'role:SuperAdmin,Administrador Hospitalar
     Route::get('/urgencias/{triage}/pase-salida', [SuperAdminController::class, 'paseSalida'])->name('paseSalida');
     Route::get('/farmacia', [SuperAdminController::class, 'farmacia'])->name('farmacia');
     Route::post('/farmacia/prescribe', [SuperAdminController::class, 'prescribe'])->name('farmacia.prescribe');
-    Route::post('/farmacia', [SuperAdminController::class, 'storeMedication'])->name('storeMedication');
+                Route::post('/farmacia', [SuperAdminController::class, 'storeMedication'])->name('storeMedication');
     Route::post('/finanzas/facturas', [SuperAdminController::class, 'storeInvoice'])->name('finanzas.storeInvoice');
     Route::put('/finanzas/facturas/{id}', [SuperAdminController::class, 'updateInvoice'])->name('finanzas.updateInvoice');
     Route::delete('/finanzas/facturas/{id}', [SuperAdminController::class, 'deleteInvoice'])->name('finanzas.deleteInvoice');
