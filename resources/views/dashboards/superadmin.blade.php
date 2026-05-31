@@ -67,7 +67,7 @@
         <a href="#"><i class="fas fa-hospital"></i> Operacion Hospitalaria</a>
         <a href="#"><i class="fas fa-database"></i> Big Data / MongoDB</a>
         <a href="{{ route('logout') }}" class="logout" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-            <i class="fas fa-sign-out-alt"></i> Cerrar Sesion
+            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
         </a>
         <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden">@csrf</form>
     </div>

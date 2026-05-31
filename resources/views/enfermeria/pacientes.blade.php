@@ -94,4 +94,5 @@
         </tbody>
     </table>
 </div>
+{{ $patients->withQueryString()->links() }}
 @endsection

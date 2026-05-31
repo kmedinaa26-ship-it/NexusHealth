@@ -1,6 +1,6 @@
 @extends('enfermeria.layout')
 @section('title', 'Hospitalizacion')
-@section('nav-hospitalizacion', 'active')
+@section('nav-hospitalización', 'active')
 
 @section('content')
 <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
@@ -48,4 +48,5 @@
         @endforeach
     </div>
 </div>
+{{ $hospitalizations->withQueryString()->links() }}
 @endsection

@@ -114,4 +114,5 @@ function openDerivationModal(patientId) {
     }, 200);
 }
 </script>
+{{ $triages->withQueryString()->links() }}
 @endsection

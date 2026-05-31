@@ -40,4 +40,5 @@
 </div>
 @endforeach
 @endif
+{{ $alerts->withQueryString()->links() }}
 @endsection

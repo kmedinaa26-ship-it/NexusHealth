@@ -41,4 +41,5 @@
     </table>
 </div>
 @endif
+{{ $suspicious->withQueryString()->links() }}
 @endsection

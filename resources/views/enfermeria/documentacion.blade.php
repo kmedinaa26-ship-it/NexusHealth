@@ -19,7 +19,7 @@
     <div style="background:#1E1A17; color:white; padding:1rem 1.25rem; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="document.getElementById('exp-{{ $p->id }}').style.display = document.getElementById('exp-{{ $p->id }}').style.display === 'none' ? 'block' : 'none'">
         <div>
             <span style="font-weight:800; font-size:1rem;">{{ $p->patient_name }}</span>
-            <span style="font-size:0.8rem; opacity:0.8;"> - {{ $p->age }} anos</span>
+            <span style="font-size:0.8rem; opacity:0.8;"> - {{ $p->age }} años</span>
         </div>
         <div style="display:flex; align-items:center; gap:0.5rem;">
             @php $colors = ['Rojo'=>'#DC2626','Naranja'=>'#FF8C42','Amarillo'=>'#D97706','Verde'=>'#2D9E6A','Azul'=>'#3B82F6']; @endphp
@@ -70,7 +70,7 @@
             @endforeach
         </div>
         @else
-        <p style="color:#94A3B8; font-size:0.8rem; text-align:center; padding:0.5rem;">Sin notas de evolucion registradas</p>
+        <p style="color:#94A3B8; font-size:0.8rem; text-align:center; padding:0.5rem;">Sin notas de evolución registradas</p>
         @endif
 
         <!-- Acciones Rapidas -->
@@ -82,4 +82,5 @@
     </div>
 </div>
 @endforeach
+{{ $patients->withQueryString()->links() }}
 @endsection

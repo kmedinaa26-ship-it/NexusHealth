@@ -69,4 +69,5 @@
         </form>
     </div>
 </div>
+{{ $beds->withQueryString()->links() }}
 @endsection

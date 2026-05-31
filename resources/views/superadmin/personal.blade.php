@@ -147,4 +147,5 @@ function openRejectModal(userId) {
     document.getElementById('modal-reject').style.display = 'flex';
 }
 </script>
+{{ $users->withQueryString()->links() }}
 @endsection

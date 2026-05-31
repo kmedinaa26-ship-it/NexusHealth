@@ -81,4 +81,5 @@
         </tbody>
     </table>
 </div>
+{{ $users->withQueryString()->links() }}
 @endsection

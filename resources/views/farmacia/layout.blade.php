@@ -66,7 +66,7 @@
         <div class="sidebar-footer">
             <form action="{{ route('logout') }}" method="POST">
                 @csrf
-                <button type="submit" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Cerrar Sesion</button>
+                <button type="submit" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
             </form>
         </div>
     </div>

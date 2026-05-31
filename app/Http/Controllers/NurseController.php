@@ -23,14 +23,14 @@ class NurseController extends Controller
         $hospitalized = Triage::where('status', 'Hospitalizado')->count();
         $bedsAvailable = Bed::where('status', 'Disponible')->count();
         $alerts = MedicalAlert::where('is_read', false)->orderBy('created_at', 'desc')->take(5)->get();
-        $criticalPatients = Triage::where('triage_level', 'Rojo')->whereIn('status', ['En Espera', 'En Atención'])->get();
+        $criticalPatients = Triage::where('triage_level', 'Rojo')->whereIn('status', ['En Espera', 'En Atención'])->take(20)->get();
 
         return view('enfermeria.dashboard', compact('critical', 'active', 'hospitalized', 'bedsAvailable', 'alerts', 'criticalPatients'));
     }
 
     public function triage()
     {
-        $patients = Triage::whereIn('status', ['En Espera', 'En Atención'])->orderBy('created_at', 'desc')->get();
+        $patients = Triage::whereIn('status', ['En Espera', 'En Atención'])->orderBy('created_at', 'desc')->paginate(30);
         $doctors = User::where('role', 'like', 'Médico%')->where('status', 1)->get();
         return view('enfermeria.triage', compact('patients', 'doctors'));
     }
@@ -50,36 +50,29 @@ class NurseController extends Controller
             'triage_level' => $request->triage_level,
             'symptoms' => $request->symptoms,
             'status' => 'En Espera',
-            'nurse_id' => Auth::id(),
+            'assigned_area' => 'Urgencias',
+            'assigned_doctor' => $request->doctor_id ?? 1,
         ]);
 
         if ($request->triage_level === 'Rojo') {
             MedicalAlert::create([
                 'triage_id' => $triage->id,
                 'nurse_id' => Auth::id(),
-                'type' => 'Triage Critico',
-                'severity' => 'Critica',
-                'message' => 'Paciente Triage ROJO requiere atencion inmediata',
+                'type' => 'Crítico',
+                'category' => 'Triage',
+                'message' => 'Paciente Triage ROJO requiere atención inmediata',
+                'severity' => 'Crítica',
+                'triggered_by' => Auth::id(),
             ]);
         }
-
-        AuditLog::create([
-            'user_id' => Auth::id(),
-            'user_name' => Auth::user()->name,
-            'user_role' => Auth::user()->role,
-            'action' => 'Triage Aplicado',
-            'module' => 'Enfermeria',
-            'ip_address' => $request->ip(),
-            'details' => "Paciente: {$triage->patient_name} - Nivel: {$triage->triage_level}",
-        ]);
 
         return back()->with('success', 'Triage registrado correctamente para ' . $triage->patient_name);
     }
 
     public function signosVitales()
     {
-        $patients = Triage::whereIn('status', ['En Espera', 'En Atención', 'Hospitalizado'])->orderBy('created_at', 'desc')->get();
-        $recentVitals = VitalSign::with('triage', 'nurse')->orderBy('created_at', 'desc')->take(20)->get();
+        $patients = Triage::whereIn('status', ['En Espera', 'En Atención', 'Hospitalizado'])->orderBy('created_at', 'desc')->paginate(30);
+        $recentVitals = VitalSign::with('triage')->orderBy('created_at', 'desc')->take(20)->get();
         return view('enfermeria.signos', compact('patients', 'recentVitals'));
     }
 
@@ -87,61 +80,66 @@ class NurseController extends Controller
     {
         $request->validate([
             'triage_id' => 'required',
-            'ta' => 'required',
-            'fc' => 'required',
-            'temp' => 'required',
-            'spo2' => 'required',
+            'temperature' => 'required',
+            'heart_rate' => 'required',
+            'blood_pressure' => 'required',
+            'oxygen_saturation' => 'required',
         ]);
 
         $isCritical = false;
         $alertMessages = [];
 
-        if ((int)$request->spo2 < 90) { $isCritical = true; $alertMessages[] = "SpO2 BAJO: {$request->spo2}%"; }
-        if ((int)$request->fc > 120 || (int)$request->fc < 50) { $isCritical = true; $alertMessages[] = "FC ANORMAL: {$request->fc} lpm"; }
-        if ((float)$request->temp > 39.0) { $isCritical = true; $alertMessages[] = "FIEBRE ALTA: {$request->temp}C"; }
+        if ((int)$request->oxygen_saturation < 90) { $isCritical = true; $alertMessages[] = "SpO2 BAJO: {$request->oxygen_saturation}%"; }
+        if ((int)$request->heart_rate > 120 || (int)$request->heart_rate < 50) { $isCritical = true; $alertMessages[] = "FC ANORMAL: {$request->heart_rate} lpm"; }
+        if ((float)$request->temperature > 39.0) { $isCritical = true; $alertMessages[] = "FIEBRE ALTA: {$request->temperature}°C"; }
 
         VitalSign::create([
             'triage_id' => $request->triage_id,
-            'nurse_id' => Auth::id(),
-            'ta' => $request->ta,
-            'fc' => $request->fc,
-            'temp' => $request->temp,
-            'spo2' => $request->spo2,
-            'fr' => $request->fr,
+            'patient_name' => Triage::find($request->triage_id)?->patient_name ?? '',
+            'recorded_by' => Auth::id(),
+            'temperature' => $request->temperature,
+            'heart_rate' => $request->heart_rate,
+            'blood_pressure' => $request->blood_pressure,
+            'oxygen_saturation' => $request->oxygen_saturation,
+            'respiratory_rate' => $request->respiratory_rate,
             'glucose' => $request->glucose,
-            'pain_scale' => $request->pain_scale,
-            'notes' => $request->notes,
+            'weight' => $request->weight,
+            'height' => $request->height,
             'is_critical' => $isCritical,
         ]);
 
         $triage = Triage::find($request->triage_id);
-        $triage->update([
-            'vitals_ta' => $request->ta,
-            'vitals_fc' => $request->fc,
-            'vitals_temp' => $request->temp,
-            'vitals_spo2' => $request->spo2,
-        ]);
+        if ($triage) {
+            $triage->update([
+                'vitals_ta' => $request->blood_pressure,
+                'vitals_fc' => (string)$request->heart_rate,
+                'vitals_temp' => (string)$request->temperature,
+                'vitals_spo2' => (string)$request->oxygen_saturation,
+            ]);
+        }
 
         if ($isCritical) {
             foreach ($alertMessages as $msg) {
                 MedicalAlert::create([
                     'triage_id' => $request->triage_id,
-                    'nurse_id' => Auth::id(),
-                    'type' => 'Signos Vitales Criticos',
-                    'severity' => 'Critica',
+                    'patient_name' => $triage?->patient_name ?? '',
+                    'type' => 'Crítico',
+                    'category' => 'Signos Vitales',
                     'message' => $msg,
+                    'severity' => 'Crítica',
+                    'triggered_by' => Auth::id(),
                 ]);
             }
         }
 
-        $msg = 'Signos vitales registrados para ' . $triage->patient_name;
-        if ($isCritical) { $msg .= ' - ALERTA CRITICA GENERADA'; }
+        $msg = 'Signos vitales registrados para ' . ($triage?->patient_name ?? 'paciente');
+        if ($isCritical) { $msg .= ' - ALERTA CRÍTICA GENERADA'; }
         return back()->with('success', $msg);
     }
 
     public function pacientes()
     {
-        $patients = Triage::with('vitalSigns')->orderBy('created_at', 'desc')->get();
+        $patients = Triage::orderBy('created_at', 'desc')->paginate(30);
         return view('enfermeria.pacientes', compact('patients'));
     }
 
@@ -151,20 +149,9 @@ class NurseController extends Controller
         $triage = Triage::find($id);
         if (!$triage) { return back()->with('error', 'Paciente no encontrado'); }
 
-        $areaAnterior = $triage->assigned_area;
         $triage->update([
             'assigned_area' => $request->destino,
             'status' => 'En Atención',
-        ]);
-
-        AuditLog::create([
-            'user_id' => Auth::id(),
-            'user_name' => Auth::user()->name,
-            'user_role' => Auth::user()->role,
-            'action' => 'Paciente Enviado',
-            'module' => 'Enfermeria',
-            'ip_address' => $request->ip(),
-            'details' => "{$triage->patient_name} enviado a {$request->destino}" . ($areaAnterior ? " (antes en {$areaAnterior})" : ''),
         ]);
 
         return back()->with('success', "{$triage->patient_name} fue enviado a {$request->destino} correctamente");
@@ -179,16 +166,6 @@ class NurseController extends Controller
         $areaAnterior = $triage->assigned_area;
         $triage->update(['assigned_area' => $request->destino]);
 
-        AuditLog::create([
-            'user_id' => Auth::id(),
-            'user_name' => Auth::user()->name,
-            'user_role' => Auth::user()->role,
-            'action' => 'Paciente Reasignado',
-            'module' => 'Enfermeria',
-            'ip_address' => $request->ip(),
-            'details' => "{$triage->patient_name} reasignado de {$areaAnterior} a {$request->destino}",
-        ]);
-
         return back()->with('success', "{$triage->patient_name} reasignado de {$areaAnterior} a {$request->destino}");
     }
 
@@ -197,34 +174,28 @@ class NurseController extends Controller
         $triage = Triage::find($id);
         if (!$triage) { return back()->with('error', 'Paciente no encontrado'); }
 
-        $triage->update(['status' => 'Dado de Alta']);
+        $triage->update([
+            'status' => 'Dado de Alta',
+            'discharge_date' => now(),
+        ]);
 
-        // Liberar cama si estaba hospitalizado
         $hosp = Hospitalization::where('triage_id', $id)->where('status', 'Activa')->first();
         if ($hosp) {
-            Bed::find($hosp->bed_id)->update(['status' => 'Disponible']);
+            if ($hosp->bed_id) {
+                Bed::find($hosp->bed_id)?->update(['status' => 'Disponible']);
+            }
             $hosp->update(['status' => 'Alta', 'discharge_date' => now()]);
         }
-
-        AuditLog::create([
-            'user_id' => Auth::id(),
-            'user_name' => Auth::user()->name,
-            'user_role' => Auth::user()->role,
-            'action' => 'Paciente Dado de Alta',
-            'module' => 'Enfermeria',
-            'ip_address' => $request->ip(),
-            'details' => "{$triage->patient_name} dado de alta",
-        ]);
 
         return back()->with('success', "{$triage->patient_name} fue dado de alta correctamente");
     }
 
     public function hospitalizacion()
     {
-        $hospitalizations = Hospitalization::with('triage', 'bed', 'doctor', 'nurse')->orderBy('admission_date', 'desc')->get();
+        $hospitalizations = Hospitalization::with('triage', 'bed', 'doctor')->orderBy('admission_date', 'desc')->paginate(30);
         $beds = Bed::orderBy('floor')->orderBy('room_number')->get();
         $doctors = User::where('role', 'like', 'Médico%')->where('status', 1)->get();
-        $activePatients = Triage::whereIn('status', ['En Atención', 'Hospitalizado'])->get();
+        $activePatients = Triage::whereIn('status', ['En Atención', 'Hospitalizado'])->take(50)->get();
         return view('enfermeria.hospitalizacion', compact('hospitalizations', 'beds', 'doctors', 'activePatients'));
     }
 
@@ -242,54 +213,60 @@ class NurseController extends Controller
             'status' => 'Activa',
         ]);
 
-        Bed::find($request->bed_id)->update(['status' => 'Ocupada']);
-        Triage::find($request->triage_id)->update(['status' => 'Hospitalizado']);
+        Bed::find($request->bed_id)?->update(['status' => 'Ocupada']);
+        Triage::find($request->triage_id)?->update(['status' => 'Hospitalizado']);
 
         return back()->with('success', 'Paciente hospitalizado correctamente');
     }
 
     public function evolucion()
     {
-        $patients = Triage::whereIn('status', ['En Atención', 'Hospitalizado'])->orderBy('created_at', 'desc')->get();
-        $evolutions = NurseEvolution::with('triage', 'nurse')->orderBy('created_at', 'desc')->take(30)->get();
+        $patients = Triage::whereIn('status', ['En Atención', 'Hospitalizado'])->orderBy('created_at', 'desc')->paginate(30);
+        $evolutions = NurseEvolution::with('triage')->orderBy('created_at', 'desc')->take(30)->get();
         return view('enfermeria.evolucion', compact('patients', 'evolutions'));
     }
 
     public function storeEvolution(Request $request)
     {
-        $request->validate(['triage_id' => 'required', 'notes' => 'required']);
+        $request->validate(['triage_id' => 'required', 'observation' => 'required']);
+
+        $triage = Triage::find($request->triage_id);
 
         NurseEvolution::create([
             'triage_id' => $request->triage_id,
+            'patient_name' => $triage?->patient_name ?? '',
             'nurse_id' => Auth::id(),
-            'notes' => $request->notes,
+            'observation' => $request->observation,
+            'intervention' => $request->intervention,
+            'response' => $request->response,
             'priority' => $request->priority ?? 'Normal',
-            'alert_doctor' => $request->has('alert_doctor'),
         ]);
 
-        if ($request->has('alert_doctor')) {
+        if ($request->priority === 'Urgente' || $request->priority === 'Crítica') {
             MedicalAlert::create([
                 'triage_id' => $request->triage_id,
-                'nurse_id' => Auth::id(),
-                'type' => 'Evolucion - Alerta Medico',
-                'severity' => $request->priority === 'Urgente' ? 'Alta' : 'Media',
-                'message' => 'Enfermeria solicita revision: ' . substr($request->notes, 0, 100),
+                'patient_name' => $triage?->patient_name ?? '',
+                'type' => 'Crítico',
+                'category' => 'Hospitalización',
+                'message' => 'Enfermería solicita revisión: ' . substr($request->observation, 0, 100),
+                'severity' => $request->priority === 'Crítica' ? 'Crítica' : 'Alta',
+                'triggered_by' => Auth::id(),
             ]);
         }
 
-        return back()->with('success', 'Nota de evolucion registrada');
+        return back()->with('success', 'Nota de evolución registrada');
     }
 
     public function alertas()
     {
-        $alerts = MedicalAlert::with('triage', 'nurse')->orderBy('is_read')->orderBy('created_at', 'desc')->get();
+        $alerts = MedicalAlert::with('triage')->orderBy('is_read')->orderBy('created_at', 'desc')->paginate(30);
         return view('enfermeria.alertas', compact('alerts'));
     }
 
     public function markAlertRead($id)
     {
-        MedicalAlert::find($id)->update(['is_read' => true, 'read_at' => now()]);
-        return back()->with('success', 'Alerta marcada como leida');
+        MedicalAlert::find($id)?->update(['is_read' => true]);
+        return back()->with('success', 'Alerta marcada como leída');
     }
 
     public function medicamentos()
@@ -300,7 +277,7 @@ class NurseController extends Controller
 
     public function documentacion()
     {
-        $patients = Triage::whereIn('status', ['En Atención', 'Hospitalizado'])->orderBy('created_at', 'desc')->get();
+        $patients = Triage::whereIn('status', ['En Atención', 'Hospitalizado'])->orderBy('created_at', 'desc')->paginate(30);
         return view('enfermeria.documentacion', compact('patients'));
     }
 

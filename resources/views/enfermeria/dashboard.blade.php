@@ -8,7 +8,7 @@
     <i class="fas fa-exclamation-triangle" style="font-size:2rem; color:#DC2626;"></i>
     <div>
         <h3 style="font-weight:800; color:#DC2626;">ALERTA CRITICA</h3>
-        <p style="font-size:0.9rem; color:#991B1B;">Hay {{ $critical }} paciente(s) en Triage Rojo que requieren atencion inmediata.</p>
+        <p style="font-size:0.9rem; color:#991B1B;">Hay {{ $critical }} paciente(s) en Triage Rojo que requieren atención inmediata.</p>
     </div>
     <a href="{{ route('enfermeria.triage') }}" style="background:#DC2626; color:white; padding:0.6rem 1.2rem; border-radius:8px; text-decoration:none; font-weight:700; font-size:0.85rem; margin-left:auto;">Atender Ahora</a>
 </div>
@@ -23,7 +23,7 @@
     <div style="background:white; padding:1.5rem; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.04); border-top:4px solid #F59E0B;">
         <div style="font-size:0.75rem; font-weight:700; color:#64748B; text-transform:uppercase;">Activos</div>
         <div style="font-size:2.2rem; font-weight:800; color:#F59E0B;">{{ $active }}</div>
-        <div style="font-size:0.75rem; color:#94A3B8;">En atencion</div>
+        <div style="font-size:0.75rem; color:#94A3B8;">En atención</div>
     </div>
     <div style="background:white; padding:1.5rem; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.04); border-top:4px solid #3B82F6;">
         <div style="font-size:0.75rem; font-weight:700; color:#64748B; text-transform:uppercase;">Hospitalizados</div>

@@ -55,7 +55,7 @@
         <div class="ns">Ver</div>
         <a href="{{route('medico.signos')}}" class="ni @yield('nav-signos')"><i class="fas fa-heartbeat"></i> Signos Vitales</a>
         <a href="{{route('medico.estudios')}}" class="ni @yield('nav-estudios')"><i class="fas fa-microscope"></i> Estudios</a>
-        <a href="{{route('medico.evolucion')}}" class="ni @yield('nav-evolucion')"><i class="fas fa-notes-medical"></i> Evolución</a>
+        <a href="{{route('medico.evolucion')}}" class="ni @yield('nav-evolución')"><i class="fas fa-notes-medical"></i> Evolución</a>
         @endif
 
         @if($isB)
@@ -68,11 +68,11 @@
         <a href="{{route('medico.signos')}}" class="ni @yield('nav-signos')"><i class="fas fa-heartbeat"></i> Signos Vitales</a>
         <a href="{{route('medico.estudios')}}" class="ni @yield('nav-estudios')"><i class="fas fa-microscope"></i> Estudios</a>
         <div class="ns">Hospitalización</div>
-        <a href="{{route('medico.hospitalizacion')}}" class="ni @yield('nav-hospitalizacion')"><i class="fas fa-bed"></i> Hospitalización</a>
+        <a href="{{route('medico.hospitalizacion')}}" class="ni @yield('nav-hospitalización')"><i class="fas fa-bed"></i> Hospitalización</a>
         <a href="{{route('medico.camas')}}" class="ni @yield('nav-camas')"><i class="fas fa-th"></i> Mapa de Camas</a>
         <div class="ns">Sistema</div>
         <a href="{{route('medico.servicios')}}" class="ni @yield('nav-servicios')"><i class="fas fa-concierge-bell"></i> Servicios</a>
-        <a href="{{route('medico.evolucion')}}" class="ni @yield('nav-evolucion')"><i class="fas fa-notes-medical"></i> Evolución</a>
+        <a href="{{route('medico.evolucion')}}" class="ni @yield('nav-evolución')"><i class="fas fa-notes-medical"></i> Evolución</a>
         <a href="{{route('medico.alertas')}}" class="ni @yield('nav-alertas')"><i class="fas fa-bell"></i> Alertas</a>
         <a href="{{route('medico.reportes')}}" class="ni @yield('nav-reportes')"><i class="fas fa-chart-bar"></i> Reportes</a>
         @endif
@@ -88,13 +88,13 @@
         <a href="{{route('medico.estudios')}}" class="ni @yield('nav-estudios')"><i class="fas fa-microscope"></i> Estudios</a>
         <a href="{{route('medico.tratamientos')}}" class="ni @yield('nav-tratamientos')"><i class="fas fa-pills"></i> Tratamientos</a>
         <div class="ns">Hospitalización</div>
-        <a href="{{route('medico.hospitalizacion')}}" class="ni @yield('nav-hospitalizacion')"><i class="fas fa-bed"></i> Hospitalización</a>
+        <a href="{{route('medico.hospitalizacion')}}" class="ni @yield('nav-hospitalización')"><i class="fas fa-bed"></i> Hospitalización</a>
         <a href="{{route('medico.camas')}}" class="ni @yield('nav-camas')"><i class="fas fa-th"></i> Mapa de Camas</a>
         <div class="ns">Sistema</div>
         <a href="{{route('medico.servicios')}}" class="ni @yield('nav-servicios')"><i class="fas fa-concierge-bell"></i> Servicios</a>
         <a href="{{route('medico.farmaciaStock')}}" class="ni @yield('nav-farmaciaStock')"><i class="fas fa-capsules"></i> Farmacia</a>
         <a href="{{route('medico.insumos')}}" class="ni @yield('nav-insumos')"><i class="fas fa-box-open"></i> Insumos</a>
-        <a href="{{route('medico.evolucion')}}" class="ni @yield('nav-evolucion')"><i class="fas fa-notes-medical"></i> Evolución</a>
+        <a href="{{route('medico.evolucion')}}" class="ni @yield('nav-evolución')"><i class="fas fa-notes-medical"></i> Evolución</a>
         <a href="{{route('medico.alertas')}}" class="ni @yield('nav-alertas')"><i class="fas fa-bell"></i> Alertas</a>
         <a href="{{route('medico.reportes')}}" class="ni @yield('nav-reportes')"><i class="fas fa-chart-bar"></i> Reportes</a>
         <div class="ns" style="color:#DC2626;font-weight:800">🔴 Crítico</div>

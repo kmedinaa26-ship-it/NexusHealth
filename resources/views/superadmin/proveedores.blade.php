@@ -72,4 +72,5 @@
         </form>
     </div>
 </div>
+{{ $providers->withQueryString()->links() }}
 @endsection

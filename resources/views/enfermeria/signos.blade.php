@@ -54,4 +54,5 @@
         @endforeach
     </div>
 </div>
+{{ $patients->withQueryString()->links() }}
 @endsection
