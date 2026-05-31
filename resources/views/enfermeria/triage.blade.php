@@ -24,8 +24,8 @@
                         <option value="Rojo" style="color:#DC2626;">Rojo - Resucitacion</option>
                         <option value="Naranja" style="color:#FF8C42;">Naranja - Emergencia</option>
                         <option value="Amarillo" style="color:#D97706;">Amarillo - Urgencia</option>
-                        <option value="Verde" style="color:#2D9E6A;" selected>Verde - Urgencia Menor</option>
-                        <option value="Azul" style="color:#3B82F6;">Azul - No Urgente</option>
+                        <option value="Verde" style="color:#F97316;" selected>Verde - Urgencia Menor</option>
+                        <option value="Azul" style="color:#DC2626;">Azul - No Urgente</option>
                     </select>
                 </div>
             </div>
@@ -39,8 +39,8 @@
 
     <!-- Pacientes en Espera -->
     <div style="background:white; padding:1.5rem; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.04);">
-        <h3 style="font-weight:800; margin-bottom:1.25rem;"><i class="fas fa-clock" style="color:#F59E0B;"></i> Pacientes en Espera</h3>
-        @php $colors = ['Rojo'=>'#DC2626','Naranja'=>'#FF8C42','Amarillo'=>'#D97706','Verde'=>'#2D9E6A','Azul'=>'#3B82F6']; @endphp
+        <h3 style="font-weight:800; margin-bottom:1.25rem;"><i class="fas fa-clock" style="color:#F97316;"></i> Pacientes en Espera</h3>
+        @php $colors = ['Rojo'=>'#DC2626','Naranja'=>'#FF8C42','Amarillo'=>'#D97706','Verde'=>'#F97316','Azul'=>'#DC2626']; @endphp
         @if($patients->isEmpty())
         <p style="color:#94A3B8; text-align:center; padding:2rem;">No hay pacientes en espera</p>
         @else

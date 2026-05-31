@@ -20,19 +20,19 @@
         <div style="font-size:2.2rem; font-weight:800; color:#DC2626;">{{ $critical }}</div>
         <div style="font-size:0.75rem; color:#94A3B8;">Triage Rojo</div>
     </div>
-    <div style="background:white; padding:1.5rem; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.04); border-top:4px solid #F59E0B;">
+    <div style="background:white; padding:1.5rem; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.04); border-top:4px solid #F97316;">
         <div style="font-size:0.75rem; font-weight:700; color:#64748B; text-transform:uppercase;">Activos</div>
-        <div style="font-size:2.2rem; font-weight:800; color:#F59E0B;">{{ $active }}</div>
+        <div style="font-size:2.2rem; font-weight:800; color:#F97316;">{{ $active }}</div>
         <div style="font-size:0.75rem; color:#94A3B8;">En atención</div>
     </div>
-    <div style="background:white; padding:1.5rem; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.04); border-top:4px solid #3B82F6;">
+    <div style="background:white; padding:1.5rem; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.04); border-top:4px solid #DC2626;">
         <div style="font-size:0.75rem; font-weight:700; color:#64748B; text-transform:uppercase;">Hospitalizados</div>
-        <div style="font-size:2.2rem; font-weight:800; color:#3B82F6;">{{ $hospitalized }}</div>
+        <div style="font-size:2.2rem; font-weight:800; color:#DC2626;">{{ $hospitalized }}</div>
         <div style="font-size:0.75rem; color:#94A3B8;">Pacientes internos</div>
     </div>
-    <div style="background:white; padding:1.5rem; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.04); border-top:4px solid #2D9E6A;">
+    <div style="background:white; padding:1.5rem; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.04); border-top:4px solid #F97316;">
         <div style="font-size:0.75rem; font-weight:700; color:#64748B; text-transform:uppercase;">Camas Libres</div>
-        <div style="font-size:2.2rem; font-weight:800; color:#2D9E6A;">{{ $bedsAvailable }}</div>
+        <div style="font-size:2.2rem; font-weight:800; color:#F97316;">{{ $bedsAvailable }}</div>
         <div style="font-size:0.75rem; color:#94A3B8;">Disponibles</div>
     </div>
 </div>
@@ -44,9 +44,9 @@
         <p style="color:#94A3B8; text-align:center; padding:2rem;">No hay alertas pendientes</p>
         @else
         @foreach($alerts as $alert)
-        <div style="border-left:3px solid {{ $alert->severity === 'Critica' ? '#DC2626' : '#F59E0B' }}; padding:0.75rem; margin-bottom:0.75rem; background:#FAFAFA; border-radius:0 8px 8px 0;">
+        <div style="border-left:3px solid {{ $alert->severity === 'Critica' ? '#DC2626' : '#F97316' }}; padding:0.75rem; margin-bottom:0.75rem; background:#FAFAFA; border-radius:0 8px 8px 0;">
             <div style="font-size:0.75rem; color:#94A3B8;">{{ $alert->created_at->format('H:i') }}</div>
-            <div style="font-weight:700; font-size:0.85rem; color:{{ $alert->severity === 'Critica' ? '#DC2626' : '#F59E0B' }}">{{ $alert->type }}</div>
+            <div style="font-weight:700; font-size:0.85rem; color:{{ $alert->severity === 'Critica' ? '#DC2626' : '#F97316' }}">{{ $alert->type }}</div>
             <div style="font-size:0.8rem; color:#475569;">{{ $alert->message }}</div>
         </div>
         @endforeach

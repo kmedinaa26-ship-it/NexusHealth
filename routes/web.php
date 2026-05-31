@@ -22,6 +22,7 @@ Route::middleware(['auth', 'verified', 'role:Médico A,Médico B,Médico C'])->p
 
     // PACIENTES
     Route::get('/pacientes', [DoctorController::class, 'pacientes'])->name('pacientes');
+    Route::post('/pacientes/{id}/alta', [NurseController::class, 'darAlta'])->name('darAlta');
     Route::post('/pacientes/{id}/asignar', [DoctorController::class, 'asignarPaciente'])->name('asignarPaciente');
     Route::get('/registrar-paciente', [DoctorController::class, 'registrarPaciente'])->name('registrarPaciente');
     Route::post('/registrar-paciente', [DoctorController::class, 'storeNuevoPaciente'])->name('storeNuevoPaciente');
@@ -63,7 +64,12 @@ Route::middleware(['auth', 'verified', 'role:Médico A,Médico B,Médico C'])->p
     Route::post('/tratamientos', [DoctorController::class, 'storeTratamiento'])->name('storeTratamiento');
 
     // EVOLUCIÓN
+    Route::get('/api/pacientes-camas', [AppHttpControllersApiPatientController::class, 'pacientesParaCamas']);
+    Route::get('/mapa-camas', [NurseController::class, 'mapaCamas'])->name('mapaCamas');
+    Route::post('/camas/{id}/asignar', [NurseController::class, 'asignarCama'])->name('asignarCama');
+    Route::post('/camas/{id}/liberar', [NurseController::class, 'liberarCama'])->name('liberarCama');
     Route::get('/evolucion', [DoctorController::class, 'evolucion'])->name('evolucion');
+    Route::post('/evolucion', [NurseController::class, 'storeEvolucion'])->name('storeEvolution');
     Route::post('/evolucion', [DoctorController::class, 'storeEvolucion'])->name('storeEvolucion');
     Route::put('/evolucion/{id}', [DoctorController::class, 'actualizarEvolucion'])->name('actualizarEvolucion');
     Route::delete('/evolucion/{id}', [DoctorController::class, 'eliminarEvolucion'])->name('eliminarEvolucion');
@@ -87,6 +93,7 @@ Route::middleware(['auth', 'verified', 'role:Médico A,Médico B,Médico C'])->p
 
     // ALERTAS
     Route::get('/alertas', [DoctorController::class, 'alertas'])->name('alertas');
+    Route::post('/alertas/{id}/read', [NurseController::class, 'markAlertRead'])->name('markAlertRead');
     Route::post('/alertas/{id}/read', [DoctorController::class, 'markAlertRead'])->name('markAlertRead');
     Route::delete('/alertas/{id}', [DoctorController::class, 'eliminarAlerta'])->name('eliminarAlerta');
 
@@ -99,6 +106,9 @@ Route::middleware(['auth', 'verified', 'role:Médico A,Médico B,Médico C'])->p
     Route::get('/quirofano', [DoctorController::class, 'quirofano'])->name('quirofano');
     Route::get('/controlados', [DoctorController::class, 'controlados'])->name('controlados');
     Route::get('/ia-medica', [DoctorController::class, 'iaMedica'])->name('iaMedica');
+    Route::get('/hospitalizados', [DoctorController::class, 'pacientesHospitalizados'])->name('hospitalizados');
+    Route::post('/pacientes/{id}/aceptar', [DoctorController::class, 'aceptarPaciente'])->name('aceptarPaciente');
+    Route::post('/pacientes/{id}/derivar', [DoctorController::class, 'derivarPaciente'])->name('derivarPaciente');
     Route::get('/derivaciones', [DoctorController::class, 'derivaciones'])->name('derivaciones');
     Route::get('/derivaciones/{id}/pdf', [DoctorController::class, 'exportDerivacionPDF'])->name('derivacion.pdf');    Route::get('/auditoria/export/pdf', [SuperAdminController::class, 'exportAuditPDF'])->name('auditoria.export.pdf');
     Route::get('/auditoria/export/csv', [SuperAdminController::class, 'exportAuditCSV'])->name('auditoria.export.csv');
@@ -112,23 +122,26 @@ Route::middleware(['auth', 'verified', 'role:Enfermera A,Enfermera B,Enfermera C
     Route::get('/dashboard', [NurseController::class, 'dashboard'])->name('dashboard');
     Route::get('/triage', [NurseController::class, 'triage'])->name('triage');
     Route::post('/triage', [NurseController::class, 'storeTriage'])->name('storeTriage');
-    Route::post('/triage/{id}/status', [NurseController::class, 'updateTriageStatus'])->name('updateTriageStatus');
     Route::get('/signos-vitales', [NurseController::class, 'signosVitales'])->name('signos');
-    Route::post('/signos-vitales', [NurseController::class, 'storeVitals'])->name('storeVitals');
-    Route::get('/pacientes', [NurseController::class, 'pacientes'])->name('pacientes');
-    Route::post('/pacientes/{id}/enviar', [NurseController::class, 'enviarA'])->name('enviarA');
+    Route::post('/signos-vitales', [NurseController::class, 'storeSignos'])->name('storeSignos');
+    Route::post('/signos-vitales/store', [NurseController::class, 'storeSignos'])->name('storeVitals');
     Route::get('/hospitalizacion', [NurseController::class, 'hospitalizacion'])->name('hospitalizacion');
     Route::post('/hospitalizacion', [NurseController::class, 'storeHospitalization'])->name('storeHospitalization');
     Route::get('/evolucion', [NurseController::class, 'evolucion'])->name('evolucion');
-    Route::post('/evolucion', [NurseController::class, 'storeEvolution'])->name('storeEvolucion');
+    Route::post('/evolucion', [NurseController::class, 'storeEvolucion'])->name('storeEvolution');
+    Route::get('/documentacion', [NurseController::class, 'documentacion'])->name('documentacion');
+    Route::get('/pacientes', [NurseController::class, 'pacientes'])->name('pacientes');
+    Route::post('/pacientes/{id}/alta', [NurseController::class, 'darAlta'])->name('darAlta');
+    Route::match(['PUT', 'POST'], '/pacientes/{id}/reasignar', [NurseController::class, 'reasignarPaciente'])->name('reasignar');
     Route::get('/alertas', [NurseController::class, 'alertas'])->name('alertas');
     Route::post('/alertas/{id}/read', [NurseController::class, 'markAlertRead'])->name('markAlertRead');
-    Route::get('/medicamentos', [NurseController::class, 'medicamentos'])->name('medicamentos');
-    Route::get('/documentacion', [NurseController::class, 'documentacion'])->name('documentacion');
-    Route::get('/solicitudes-farmacia', [NurseController::class, 'solicitudesFarmacia'])->name('solicitudesFarmacia');
-    Route::put('/pacientes/{id}/alta', [NurseController::class, 'enviarA'])->name('darAlta');
-    Route::post('/pacientes/{id}/reasignar', [NurseController::class, 'enviarA'])->name('reasignar');
     Route::get('/reportes', [NurseController::class, 'reportes'])->name('reportes');
+    Route::get('/medicamentos', [NurseController::class, 'medicamentos'])->name('medicamentos');
+    Route::get('/solicitudes-farmacia', [NurseController::class, 'solicitudesFarmacia'])->name('solicitudesFarmacia');
+    Route::get('/mapa-camas', [NurseController::class, 'mapaCamas'])->name('mapaCamas');
+    Route::post('/camas/{id}/asignar', [NurseController::class, 'asignarCama'])->name('asignarCama');
+    Route::post('/camas/{id}/liberar', [NurseController::class, 'liberarCama'])->name('liberarCama');
+    Route::get('/api/pacientes-camas', [NurseController::class, 'pacientesParaCamas']);
 });
 
 // ==========================================
@@ -199,6 +212,7 @@ Route::middleware(['auth', 'verified', 'role:SuperAdmin,Administrador Hospitalar
     Route::delete('/personal/{user}', [SuperAdminController::class, 'deleteUser'])->name('deleteUser');
     Route::get('/score-riesgo', [SuperAdminController::class, 'scoreRiesgo'])->name('scoreRiesgo');
     Route::get('/pacientes', [SuperAdminController::class, 'pacientes'])->name('pacientes');
+    Route::post('/pacientes/{id}/alta', [NurseController::class, 'darAlta'])->name('darAlta');
     Route::get('/urgencias', [SuperAdminController::class, 'urgencias'])->name('urgencias');
     Route::post('/urgencias', [SuperAdminController::class, 'storeTriage'])->name('storeTriage');
     Route::put('/urgencias/{triage}/vitals', [SuperAdminController::class, 'updateVitals'])->name('updateVitals');

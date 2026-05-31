@@ -655,3 +655,44 @@ class DoctorController extends Controller
         return $pdf->download('Reporte_Medico_' . date('Y-m-d') . '.pdf');
     }
 }
+
+    public function pacientesHospitalizados() {
+        $pacientes = Triage::where('status', 'Hospitalizado')
+            ->whereNotNull('assigned_doctor_id')
+            ->where('assigned_doctor_id', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->paginate(30);
+        $pendientes = Triage::where('status', 'Hospitalizado')
+            ->whereNull('assigned_doctor_id')
+            ->orderBy('created_at', 'desc')
+            ->take(20)
+            ->get();
+        $medicosBC = User::whereIn('role', ['Médico B', 'Médico C'])->where('status', 'Activo')->get();
+        return view('medico.hospitalizados', compact('pacientes', 'pendientes', 'medicosBC'));
+    }
+
+    public function aceptarPaciente(Request $request, $id) {
+        $triage = Triage::findOrFail($id);
+        $triage->update(['assigned_doctor_id' => auth()->id()]);
+        AuditLog::create([
+            'user_id' => auth()->id(), 'user_name' => auth()->user()->name,
+            'user_role' => auth()->user()->role, 'action' => 'Paciente Aceptado',
+            'module' => 'Médico - Hospitalizados', 'ip_address' => $request->ip(),
+            'details' => $triage->patient_name . ' aceptado por ' . auth()->user()->name
+        ]);
+        return back()->with('success', "Paciente {$triage->patient_name} aceptado.");
+    }
+
+    public function derivarPaciente(Request $request, $id) {
+        $request->validate(['doctor_id' => 'required|exists:users,id']);
+        $triage = Triage::findOrFail($id);
+        $doctor = User::findOrFail($request->doctor_id);
+        $triage->update(['assigned_doctor_id' => $doctor->id]);
+        AuditLog::create([
+            'user_id' => auth()->id(), 'user_name' => auth()->user()->name,
+            'user_role' => auth()->user()->role, 'action' => 'Paciente Derivado',
+            'module' => 'Médico - Hospitalizados', 'ip_address' => $request->ip(),
+            'details' => $triage->patient_name . ' derivado a ' . $doctor->name
+        ]);
+        return back()->with('success', "Paciente derivado a {$doctor->name}.");
+    }
