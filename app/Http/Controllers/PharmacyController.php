@@ -17,21 +17,52 @@ use Illuminate\Http\Request;
 
 class PharmacyController extends Controller
 {
-    // ===== DASHBOARD =====
+    // ===== DASHBOARD MEJORADO =====
     public function dashboard() {
+        // CENTRAL
+        $centralStock = Medication::where('origin', 'Central')->sum('stock');
+        $centralValue = Medication::where('origin', 'Central')->selectRaw('SUM(stock * price) as total')->value('total') ?? 0;
+        $centralLow = Medication::where('origin', 'Central')->whereRaw('stock <= min_stock')->where('stock', '>', 0)->count();
+        $centralOut = Medication::where('origin', 'Central')->where('stock', 0)->count();
+        
+        // HOSPITALARIA
+        $hospStock = Medication::whereIn('origin', ['Hospitalaria', 'Urgencias', 'Quirurgico'])->sum('stock');
+        $hospValue = Medication::whereIn('origin', ['Hospitalaria', 'Urgencias', 'Quirurgico'])->selectRaw('SUM(stock * price) as total')->value('total') ?? 0;
+        
+        // GENERAL
         $total = Medication::count();
-        $low_stock = Medication::whereRaw('stock <= min_stock')->get();
-        $expiring_soon = Medication::whereDate('expiry_date', '<=', now()->addDays(30))->get();
+        $low_stock = Medication::whereRaw('stock <= min_stock')->where('stock', '>', 0)->orderBy('stock', 'asc')->get();
+        $expiring_soon = Medication::whereDate('expiry_date', '<=', now()->addDays(30))->orderBy('expiry_date', 'asc')->get();
         $out_of_stock = Medication::where('stock', 0)->count();
         $stock_value = Medication::selectRaw('SUM(stock * price) as total')->value('total') ?? 0;
         $controlled = Medication::where('required_level', 'A')->count();
-        $enfermera_meds = Medication::where('enfermera_can_administer', true)->count();
         $expiring_critical = Medication::whereDate('expiry_date', '<=', now()->addDays(7))->count();
+        
+        // OPERACIONES
         $pending_orders = PurchaseOrder::whereIn('status', ['Borrador', 'Enviada', 'En Transito'])->count();
         $cart_alerts = CrashCart::where('status', '!=', 'Completo')->count();
         $dispensed_today = PatientMedication::whereDate('created_at', today())->count();
+        $controladosUsados = PatientMedication::whereDate('created_at', today())->whereHas('medication', function($q) { $q->where('required_level', 'A'); })->count();
         $pending_restock = RestockRequest::whereIn('status', ['Solicitada', 'Aprobada'])->count();
-        return view('farmacia.dashboard', compact('total', 'low_stock', 'expiring_soon', 'out_of_stock', 'stock_value', 'controlled', 'enfermera_meds', 'expiring_critical', 'pending_orders', 'cart_alerts', 'dispensed_today', 'pending_restock'));
+        
+        // TOP MEDICAMENTOS DISPENSADOS HOY
+        $topDispensed = PatientMedication::whereDate('created_at', today())
+            ->selectRaw('medication_name, SUM(quantity) as total')
+            ->groupBy('medication_name')
+            ->orderByDesc('total')
+            ->take(5)
+            ->get();
+            
+        // ULTIMAS DISPENSACIONES
+        $recentDispensed = PatientMedication::orderBy('created_at', 'desc')->take(8)->get();
+
+        return view('farmacia.dashboard', compact(
+            'centralStock', 'centralValue', 'centralLow', 'centralOut',
+            'hospStock', 'hospValue',
+            'total', 'low_stock', 'expiring_soon', 'out_of_stock', 'stock_value', 'controlled', 'expiring_critical',
+            'pending_orders', 'cart_alerts', 'dispensed_today', 'controladosUsados', 'pending_restock',
+            'topDispensed', 'recentDispensed'
+        ));
     }
 
     // ===== INVENTARIO =====
@@ -106,12 +137,9 @@ class PharmacyController extends Controller
 
         AuditLog::create(['user_id' => auth()->id(), 'user_name' => auth()->user()->name, 'user_role' => auth()->user()->role, 'action' => 'Medicamento Dispensado', 'module' => 'Farmacia - Recetas', 'ip_address' => $request->ip(), 'details' => "{$med->name} x{$request->quantity} para {$patient->patient_name}" . ($interactionAlert ? ' | ALERTA' : '')]);
 
-        // AUTO-CHECK: Si el stock baja del mínimo, generar solicitud automática
         if ($med->fresh()->stock <= $med->min_stock && $med->fresh()->stock > 0) {
             $existing = RestockRequest::where('medication_id', $med->id)->whereIn('status', ['Solicitada', 'Aprobada'])->first();
-            if (!$existing) {
-                $this->autoRequestRestock($med);
-            }
+            if (!$existing) { $this->autoRequestRestock($med); }
         }
 
         $msg = "Receta dispensada: {$med->name} x{$request->quantity}. Stock actual: {$med->fresh()->stock}";
@@ -134,7 +162,6 @@ class PharmacyController extends Controller
         $priority = $med->stock == 0 ? 'Critica' : ($med->stock <= 3 ? 'Alta' : 'Media');
         $qty = $med->min_stock * 3;
         $reqNum = 'REQ-' . date('Ymd') . '-' . str_pad(RestockRequest::count() + 1, 4, '0', STR_PAD_LEFT);
-
         RestockRequest::create([
             'request_number' => $reqNum, 'medication_id' => $med->id,
             'quantity_requested' => $qty, 'priority' => $priority,
@@ -142,7 +169,6 @@ class PharmacyController extends Controller
             'reason' => "Stock bajo automatico: {$med->stock} unidades (Minimo: {$med->min_stock})",
             'required_by' => now()->addDays($priority == 'Critica' ? 1 : ($priority == 'Alta' ? 3 : 7)),
         ]);
-
         AuditLog::create(['user_id' => auth()->id(), 'user_name' => auth()->user()->name, 'user_role' => auth()->user()->role, 'action' => 'Solicitud Auto Reabastecimiento', 'module' => 'Farmacia - Desabasto', 'ip_address' => request()->ip(), 'details' => "{$reqNum}: {$med->name} x{$qty} - Prioridad: {$priority}"]);
     }
 
@@ -156,10 +182,8 @@ class PharmacyController extends Controller
 
     public function requestRestock(Request $request) {
         $request->validate(['medication_id' => 'required|exists:medications,id', 'quantity' => 'required|integer|min:1', 'priority' => 'required|in:Baja,Media,Alta,Critica', 'reason' => 'nullable|string']);
-
         $med = Medication::findOrFail($request->medication_id);
         $reqNum = 'REQ-' . date('Ymd') . '-' . str_pad(RestockRequest::count() + 1, 4, '0', STR_PAD_LEFT);
-
         RestockRequest::create([
             'request_number' => $reqNum, 'medication_id' => $med->id,
             'quantity_requested' => $request->quantity, 'priority' => $request->priority,
@@ -167,9 +191,7 @@ class PharmacyController extends Controller
             'reason' => $request->reason,
             'required_by' => now()->addDays($request->priority == 'Critica' ? 1 : ($request->priority == 'Alta' ? 3 : 7)),
         ]);
-
         AuditLog::create(['user_id' => auth()->id(), 'user_name' => auth()->user()->name, 'user_role' => auth()->user()->role, 'action' => 'Solicitud de Reabastecimiento', 'module' => 'Farmacia - Desabasto', 'ip_address' => $request->ip(), 'details' => "{$reqNum}: {$med->name} x{$request->quantity} - {$request->priority}"]);
-
         return back()->with('success', "Solicitud {$reqNum} creada para {$med->name}.");
     }
 
@@ -178,12 +200,6 @@ class PharmacyController extends Controller
         $req->update(['status' => 'Aprobada', 'approved_by' => auth()->id(), 'quantity_approved' => $req->quantity_requested]);
         AuditLog::create(['user_id' => auth()->id(), 'user_name' => auth()->user()->name, 'user_role' => auth()->user()->role, 'action' => 'Solicitud Aprobada', 'module' => 'Farmacia - Desabasto', 'ip_address' => request()->ip(), 'details' => $req->request_number . ' aprobada']);
         return back()->with('success', "Solicitud {$req->request_number} aprobada.");
-    }
-
-    public function getAlternatives($id) {
-        $med = Medication::findOrFail($id);
-        $alternatives = MedicationAlternative::where('medication_id', $id)->with('alternative')->get();
-        return view('farmacia.alternativas', compact('med', 'alternatives'));
     }
 
     // ===== HISTORIAL PACIENTE =====
@@ -293,16 +309,6 @@ class PharmacyController extends Controller
         $medications = Medication::orderBy('origin')->orderBy('required_level')->get();
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('farmacia.pdf.inventory', compact('medications'));
         return $pdf->download('inventario_' . date('Y-m-d') . '.pdf');
-    }
-
-    public function exportInventoryCSV() {
-        $medications = Medication::orderBy('origin')->orderBy('required_level')->get();
-        $filename = 'inventario_' . date('Y-m-d') . '.csv';
-        $handle = fopen($filename, 'w+');
-        fputcsv($handle, ['Nombre', 'Nivel', 'Origen', 'Stock', 'Lote', 'Caducidad', 'Precio']);
-        foreach ($medications as $med) { fputcsv($handle, [$med->name, $med->required_level, $med->origin, $med->stock, $med->lot_number, $med->expiry_date, $med->price]); }
-        fclose($handle);
-        return response()->download($filename)->deleteFileAfterSend(true);
     }
 
     public function uploadCSV(Request $request) {

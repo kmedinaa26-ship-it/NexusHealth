@@ -113,7 +113,7 @@ Route::middleware(['auth', 'verified', 'role:Enfermera A,Enfermera B,Enfermera C
     Route::get('/triage', [NurseController::class, 'triage'])->name('triage');
     Route::post('/triage', [NurseController::class, 'storeTriage'])->name('storeTriage');
     Route::post('/triage/{id}/status', [NurseController::class, 'updateTriageStatus'])->name('updateTriageStatus');
-    Route::get('/signos-vitales', [NurseController::class, 'signosVitales'])->name('signosVitales');
+    Route::get('/signos-vitales', [NurseController::class, 'signosVitales'])->name('signos');
     Route::post('/signos-vitales', [NurseController::class, 'storeVitals'])->name('storeVitals');
     Route::get('/pacientes', [NurseController::class, 'pacientes'])->name('pacientes');
     Route::post('/pacientes/{id}/enviar', [NurseController::class, 'enviarA'])->name('enviarA');
@@ -135,45 +135,54 @@ Route::middleware(['auth', 'verified', 'role:Enfermera A,Enfermera B,Enfermera C
 // FARMACIA
 // ==========================================
 Route::middleware(['auth', 'verified', 'role:Farmacéutico,Admin Farmacia'])->prefix('farmacia')->name('farmacia.')->group(function () {
+    // Principal
     Route::get('/dashboard', [PharmacyController::class, 'dashboard'])->name('dashboard');
-    Route::get('/inventario', [PharmacyController::class, 'inventario'])->name('inventory');
+    Route::get('/inventario', [PharmacyController::class, 'inventory'])->name('inventory');
     Route::post('/inventario', [PharmacyController::class, 'storeMedication'])->name('storeMedication');
     Route::put('/inventario/{id}', [PharmacyController::class, 'updateMedication'])->name('updateMedication');
+    Route::get('/controlados', [PharmacyController::class, 'controlled'])->name('controlled');
+    Route::get('/enfermera-meds', [PharmacyController::class, 'enfermeraMeds'])->name('enfermeraMeds');
+
+    // Operacion
     Route::get('/dispensacion', [PharmacyController::class, 'dispensacion'])->name('dispensacion');
-    Route::post('/dispensacion', [PharmacyController::class, 'dispensar'])->name('dispense');
-    Route::get('/recetas-pendientes', [PharmacyController::class, 'recetasPendientes'])->name('recetasPendientes');
-    Route::post('/recetas-pendientes/{id}/approve', [PharmacyController::class, 'approveReceta'])->name('approveReceta');
-    Route::post('/recetas-pendientes/{id}/reject', [PharmacyController::class, 'rejectReceta'])->name('rejectReceta');
-    Route::get('/controlados', [PharmacyController::class, 'controlados'])->name('controlled');
-    Route::get('/alertas-stock', [PharmacyController::class, 'alertasStock'])->name('alertasStock');
+    Route::post('/dispensacion', [PharmacyController::class, 'dispenseMedication'])->name('dispense');
+    Route::get('/crash-carts', [PharmacyController::class, 'crashCarts'])->name('crashCarts');
+    Route::post('/crash-carts/{id}/verificar', [PharmacyController::class, 'checkCart'])->name('verificarCart');
+    Route::post('/crash-carts/{id}/check', [PharmacyController::class, 'checkCart'])->name('checkCart');
+    Route::get('/traspasos', [PharmacyController::class, 'traspasos'])->name('traspasos');
+    Route::post('/traspaso', [PharmacyController::class, 'storeTraspaso'])->name('traspaso');
+
+    // Compras
     Route::get('/proveedores', [PharmacyController::class, 'proveedores'])->name('proveedores');
     Route::post('/proveedores', [PharmacyController::class, 'storeProveedor'])->name('storeProveedor');
-    Route::get('/vencimientos', [PharmacyController::class, 'vencimientos'])->name('vencimientos');
-    Route::get('/reportes', [PharmacyController::class, 'reportes'])->name('reportes');
-    Route::get('/interacciones', [PharmacyController::class, 'interacciones'])->name('interacciones');
-    Route::get('/crash-carts', [PharmacyController::class, 'crashCarts'])->name('crashCarts');
-    Route::post('/crash-carts/{id}/verificar', [PharmacyController::class, 'verificarCart'])->name('verificarCart');
-    Route::get('/historial-paciente/{id}', [PharmacyController::class, 'historialPaciente'])->name('historialPaciente');
-    Route::get('/anomalias', [PharmacyController::class, 'alertasStock'])->name('anomalias');
-    Route::get('/carga', [PharmacyController::class, 'reportes'])->name('carga');
-    Route::post('/carga', [PharmacyController::class, 'storeMedication'])->name('uploadCSV');
-    Route::get('/consumo', [PharmacyController::class, 'reportes'])->name('consumo');
-    Route::get('/desabasto', [PharmacyController::class, 'alertasStock'])->name('desabasto');
-    Route::get('/enfermera-meds', [PharmacyController::class, 'dispensacion'])->name('enfermeraMeds');
-    Route::get('/exportar', [PharmacyController::class, 'reportes'])->name('exportar');
-    Route::get('/export/csv', [PharmacyController::class, 'reportes'])->name('export.csv');
-    Route::get('/export/pdf', [PharmacyController::class, 'reportes'])->name('export.pdf');
-    Route::get('/movimientos', [PharmacyController::class, 'inventario'])->name('movimientos');
-    Route::get('/ordenes', [PharmacyController::class, 'inventario'])->name('ordenes');
-    Route::get('/ordenes/crear', [PharmacyController::class, 'inventario'])->name('crearOrden');
-    Route::post('/ordenes', [PharmacyController::class, 'storeMedication'])->name('storeOrden');
-    Route::post('/ordenes/{id}/recibir', [PharmacyController::class, 'storeMedication'])->name('recibirOrden');
-    Route::get('/alternativas', [PharmacyController::class, 'alertasStock'])->name('alternatives');
-    Route::post('/restock/{id}/approve', [PharmacyController::class, 'storeMedication'])->name('approveRestock');
-    Route::post('/crash-carts/{id}/check', [PharmacyController::class, 'verificarCart'])->name('checkCart');
-    Route::post('/restock', [PharmacyController::class, 'storeMedication'])->name('requestRestock');
-    Route::get('/traspasos', [PharmacyController::class, 'inventario'])->name('traspasos');
-    Route::post('/traspaso', [PharmacyController::class, 'storeMedication'])->name('traspaso');
+    Route::get('/ordenes', [PharmacyController::class, 'ordenes'])->name('ordenes');
+    Route::get('/ordenes/crear', [PharmacyController::class, 'crearOrden'])->name('crearOrden');
+    Route::post('/ordenes', [PharmacyController::class, 'storeOrden'])->name('storeOrden');
+    Route::post('/ordenes/{id}/recibir', [PharmacyController::class, 'recibirOrden'])->name('recibirOrden');
+
+    // Analisis
+    Route::get('/anomalias', [PharmacyController::class, 'anomalias'])->name('anomalias');
+    Route::get('/consumo', [PharmacyController::class, 'consumo'])->name('consumo');
+    Route::get('/desabasto', [PharmacyController::class, 'desabasto'])->name('desabasto');
+    Route::post('/restock', [PharmacyController::class, 'requestRestock'])->name('requestRestock');
+    Route::post('/restock/{id}/approve', [PharmacyController::class, 'approveRestock'])->name('approveRestock');
+    Route::get('/alternativas/{id}', [PharmacyController::class, 'getAlternatives'])->name('alternatives');
+
+    // Documentacion
+    Route::get('/exportar', [PharmacyController::class, 'exportar'])->name('exportar');
+    Route::get('/export/pdf', [PharmacyController::class, 'exportInventoryPDF'])->name('export.pdf');
+    Route::get('/export/csv', [PharmacyController::class, 'exportInventoryCSV'])->name('export.csv');
+    Route::get('/carga', [PharmacyController::class, 'carga'])->name('carga');
+    Route::post('/carga', [PharmacyController::class, 'uploadCSV'])->name('uploadCSV');
+    Route::get('/movimientos', [PharmacyController::class, 'movimientos'])->name('movimientos');
+    Route::get('/historial-paciente/{id}', [PharmacyController::class, 'pacienteHistorial'])->name('historialPaciente');
+
+    // Rutas legacy que buscan los blades
+    Route::get('/alertas-stock', [PharmacyController::class, 'anomalias'])->name('alertasStock');
+    Route::get('/vencimientos', [PharmacyController::class, 'desabasto'])->name('vencimientos');
+    Route::get('/interacciones', [PharmacyController::class, 'anomalias'])->name('interacciones');
+    Route::get('/reportes', [PharmacyController::class, 'consumo'])->name('reportes');
+    Route::get('/recetas-pendientes', [PharmacyController::class, 'dispensacion'])->name('recetasPendientes');
 });
 
 // ==========================================

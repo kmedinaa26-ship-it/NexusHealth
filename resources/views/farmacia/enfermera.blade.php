@@ -3,10 +3,10 @@
 @section('nav-enfermera', 'active')
 
 @section('content')
-<div style="background: #EFF6FF; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; display: flex; align-items: center; gap: 1.5rem; border-left: 4px solid #3B82F6;">
-    <i class="fas fa-user-nurse" style="font-size: 3rem; color: #3B82F6;"></i>
+<div style="background: #FEF2F2; padding: 2rem; border-radius: 12px; margin-bottom: 2rem; display: flex; align-items: center; gap: 1.5rem; border-left: 4px solid #DC2626;">
+    <i class="fas fa-user-nurse" style="font-size: 3rem; color: #DC2626;"></i>
     <div>
-        <h3 style="font-weight: 800; color: #1E3A8A;">Medicamentos con Acceso de Enfermeria</h3>
+        <h3 style="font-weight: 800; color: #7F1D1D;">Medicamentos con Acceso de Enfermeria</h3>
         <p style="color: #736860;">Medicamentos que el personal de enfermeria puede administrar directamente sin receta medica: sueros, viales, oxigeno, material de curacion, etc.</p>
     </div>
 </div>
@@ -14,13 +14,13 @@
 @if($meds->count() > 0)
 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
     @foreach($meds as $med)
-    <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.04); border-left: 4px solid #3B82F6;">
+    <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.04); border-left: 4px solid #DC2626;">
         <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
             <div>
-                <h4 style="font-weight: 800; color: #1E1A17;">{{ $med->name }}</h4>
+                <h4 style="font-weight: 800; color: #7C2D12;">{{ $med->name }}</h4>
                 <div style="font-size:0.8rem; color:#736860;">{{ $med->active_ingredient }}</div>
             </div>
-            <span style="background:#3B82F6; color:white; padding:0.2rem 0.5rem; border-radius:10px; font-size:0.7rem; font-weight:700;">ENF</span>
+            <span style="background:#DC2626; color:white; padding:0.2rem 0.5rem; border-radius:10px; font-size:0.7rem; font-weight:700;">ENF</span>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.8rem;">
             <div><span style="color:#736860;">Stock:</span> <strong style="color:{{ $med->stock_color }};">{{ $med->stock }}</strong></div>

@@ -28,7 +28,7 @@
             <tr style="border-bottom: 1px solid #E5E7EB;">
                 <td style="padding:0.75rem; font-weight:700; color:#8C1A11;"><i class="fas fa-lock" style="font-size:0.7rem;"></i> {{ $med->name }}</td>
                 <td style="padding:0.75rem;">{{ $med->active_ingredient }}</td>
-                <td style="padding:0.75rem; font-weight:800; color:{{ $med->stock <= $med->min_stock ? '#C7291C' : '#1E1A17' }};">{{ $med->stock }}</td>
+                <td style="padding:0.75rem; font-weight:800; color:{{ $med->stock <= $med->min_stock ? '#C7291C' : '#7C2D12' }};">{{ $med->stock }}</td>
                 <td style="padding:0.75rem; font-family:monospace; font-size:0.8rem;">{{ $med->lot_number ?? 'S/N' }}</td>
                 <td style="padding:0.75rem;">{{ $med->expiry_date ? $med->expiry_date->format('d/m/Y') : 'N/A' }}</td>
                 <td style="padding:0.75rem; font-size:0.8rem;">{{ $med->provider_name ?? 'N/A' }}</td>

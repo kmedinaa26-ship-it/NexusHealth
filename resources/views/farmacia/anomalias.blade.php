@@ -22,9 +22,9 @@
         <div style="font-size: 2rem; font-weight: 800; color: #FF8C42; margin-top: 0.5rem;">{{ $critical->count() }}</div>
         <div style="font-size: 0.8rem; color: #736860; font-weight: 700;">STOCK CRITICO (<=5)</div>
     </div>
-    <div style="background: white; padding: 1.5rem; border-radius: 12px; border-top: 4px solid #1E1A17; box-shadow: 0 4px 6px rgba(0,0,0,0.04); text-align: center;">
-        <i class="fas fa-ban" style="font-size: 2rem; color: #1E1A17;"></i>
-        <div style="font-size: 2rem; font-weight: 800; color: #1E1A17; margin-top: 0.5rem;">{{ $denied->count() }}</div>
+    <div style="background: white; padding: 1.5rem; border-radius: 12px; border-top: 4px solid #7C2D12; box-shadow: 0 4px 6px rgba(0,0,0,0.04); text-align: center;">
+        <i class="fas fa-ban" style="font-size: 2rem; color: #7C2D12;"></i>
+        <div style="font-size: 2rem; font-weight: 800; color: #7C2D12; margin-top: 0.5rem;">{{ $denied->count() }}</div>
         <div style="font-size: 0.8rem; color: #736860; font-weight: 700;">RECETAS DENEGADAS</div>
     </div>
 </div>

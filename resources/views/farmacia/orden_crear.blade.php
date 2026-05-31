@@ -4,7 +4,7 @@
 
 @section('content')
 <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.04); max-width: 800px;">
-    <h3 style="font-weight: 800; margin-bottom: 1.5rem;"><i class="fas fa-file-invoice-dollar" style="color:#2D9E6A;"></i> Nueva Orden de Compra</h3>
+    <h3 style="font-weight: 800; margin-bottom: 1.5rem;"><i class="fas fa-file-invoice-dollar" style="color:#F97316;"></i> Nueva Orden de Compra</h3>
     
     <form action="{{ route('farmacia.storeOrden') }}" method="POST">
         @csrf
@@ -34,7 +34,7 @@
         </div>
         @endforeach
 
-        <button type="submit" style="width:100%; background:#2D9E6A; color:white; border:none; padding:0.8rem; border-radius:8px; font-weight:700; cursor:pointer; margin-top:1rem;">
+        <button type="submit" style="width:100%; background:#F97316; color:white; border:none; padding:0.8rem; border-radius:8px; font-weight:700; cursor:pointer; margin-top:1rem;">
             <i class="fas fa-paper-plane"></i> Generar Orden de Compra
         </button>
     </form>

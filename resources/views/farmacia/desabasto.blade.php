@@ -14,7 +14,7 @@
 @endif
 
 @if(session('success'))
-<div style="background:#EBF9F2; color:#065F46; padding:1rem; border-radius:8px; margin-bottom:1rem; border-left:4px solid #2D9E6A;">
+<div style="background:#FFF7ED; color:#9A3412; padding:1rem; border-radius:8px; margin-bottom:1rem; border-left:4px solid #F97316;">
     <i class="fas fa-check-circle"></i> {{ session('success') }}
 </div>
 @endif
@@ -28,12 +28,12 @@
         <div style="font-size: 2.5rem; font-weight: 800; color: #FF8C42;">{{ $low->count() }}</div>
         <div style="font-size: 0.85rem; color: #736860; font-weight: 700;">STOCK BAJO</div>
     </div>
-    <div style="background: white; padding: 1.5rem; border-radius: 12px; border-top: 4px solid #3B82F6; box-shadow: 0 4px 6px rgba(0,0,0,0.04); text-align: center;">
-        <div style="font-size: 2.5rem; font-weight: 800; color: #3B82F6;">{{ $requests->where('status', 'Solicitada')->count() }}</div>
+    <div style="background: white; padding: 1.5rem; border-radius: 12px; border-top: 4px solid #DC2626; box-shadow: 0 4px 6px rgba(0,0,0,0.04); text-align: center;">
+        <div style="font-size: 2.5rem; font-weight: 800; color: #DC2626;">{{ $requests->where('status', 'Solicitada')->count() }}</div>
         <div style="font-size: 0.85rem; color: #736860; font-weight: 700;">SOLICITUDES PENDIENTES</div>
     </div>
-    <div style="background: white; padding: 1.5rem; border-radius: 12px; border-top: 4px solid #2D9E6A; box-shadow: 0 4px 6px rgba(0,0,0,0.04); text-align: center;">
-        <div style="font-size: 2.5rem; font-weight: 800; color: #2D9E6A;">{{ $requests->where('status', 'Aprobada')->count() }}</div>
+    <div style="background: white; padding: 1.5rem; border-radius: 12px; border-top: 4px solid #F97316; box-shadow: 0 4px 6px rgba(0,0,0,0.04); text-align: center;">
+        <div style="font-size: 2.5rem; font-weight: 800; color: #F97316;">{{ $requests->where('status', 'Aprobada')->count() }}</div>
         <div style="font-size: 0.85rem; color: #736860; font-weight: 700;">APROBADAS</div>
     </div>
 </div>
@@ -59,7 +59,7 @@
                 <button onclick="openRestockModal({{ $med->id }}, '{{ $med->name }}', 'Critica')" style="background:#C7291C; color:white; border:none; padding:0.4rem 0.8rem; border-radius:6px; font-weight:700; cursor:pointer; font-size:0.8rem;">
                     <i class="fas fa-exclamation-triangle"></i> Solicitar Urgente
                 </button>
-                <a href="{{ route('farmacia.alternatives', $med->id) }}" style="background:#3B82F6; color:white; text-decoration:none; padding:0.4rem 0.8rem; border-radius:6px; font-weight:700; font-size:0.8rem;">
+                <a href="{{ route('farmacia.alternatives', $med->id) }}" style="background:#DC2626; color:white; text-decoration:none; padding:0.4rem 0.8rem; border-radius:6px; font-weight:700; font-size:0.8rem;">
                     <i class="fas fa-exchange-alt"></i> Ver Alternativas
                 </a>
             </div>
@@ -81,7 +81,7 @@
                 <button onclick="openRestockModal({{ $med->id }}, '{{ $med->name }}', 'Alta')" style="background:#FF8C42; color:white; border:none; padding:0.4rem 0.8rem; border-radius:6px; font-weight:700; cursor:pointer; font-size:0.8rem;">
                     <i class="fas fa-cart-plus"></i> Solicitar
                 </button>
-                <a href="{{ route('farmacia.alternatives', $med->id) }}" style="background:#3B82F6; color:white; text-decoration:none; padding:0.4rem 0.8rem; border-radius:6px; font-weight:700; font-size:0.8rem;">
+                <a href="{{ route('farmacia.alternatives', $med->id) }}" style="background:#DC2626; color:white; text-decoration:none; padding:0.4rem 0.8rem; border-radius:6px; font-weight:700; font-size:0.8rem;">
                     <i class="fas fa-exchange-alt"></i> Alternativas
                 </a>
             </div>
@@ -93,7 +93,7 @@
     <!-- PANEL DE SOLICITUDES -->
     <div>
         <div style="background: white; padding: 1rem 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.04); margin-bottom: 1rem;">
-            <h4 style="font-weight:800;"><i class="fas fa-clipboard-list" style="color:#3B82F6;"></i> Solicitudes de Reabastecimiento</h4>
+            <h4 style="font-weight:800;"><i class="fas fa-clipboard-list" style="color:#DC2626;"></i> Solicitudes de Reabastecimiento</h4>
         </div>
 
         @if($requests->count() > 0)
@@ -110,7 +110,7 @@
                 @if($req->status == 'Solicitada')
                 <form action="{{ route('farmacia.approveRestock', $req->id) }}" method="POST" style="display:inline;">
                     @csrf
-                    <button type="submit" style="background:#2D9E6A; color:white; border:none; padding:0.25rem 0.6rem; border-radius:4px; font-weight:700; cursor:pointer; font-size:0.75rem;">
+                    <button type="submit" style="background:#F97316; color:white; border:none; padding:0.25rem 0.6rem; border-radius:4px; font-weight:700; cursor:pointer; font-size:0.75rem;">
                         <i class="fas fa-check"></i> Aprobar
                     </button>
                 </form>

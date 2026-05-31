@@ -4,7 +4,7 @@
 
 @section('content')
 <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.04); margin-bottom: 1.5rem;">
-    <h3 style="font-weight: 800; color: #1E1A17;"><i class="fas fa-temperature-high" style="color:#2D9E6A;"></i> Consumo y Stock por Area</h3>
+    <h3 style="font-weight: 800; color: #7C2D12;"><i class="fas fa-temperature-high" style="color:#F97316;"></i> Consumo y Stock por Area</h3>
     <p style="color: #736860; font-size: 0.85rem;">Distribucion del inventario por origen y nivel de prescripcion.</p>
 </div>
 
@@ -20,7 +20,7 @@
                 <span style="font-size: 0.85rem; color: #736860;">{{ $origin->total_meds }} meds | {{ $origin->total_stock }} uds | ${{ number_format($origin->total_value, 0) }}</span>
             </div>
             <div style="background: #E5E7EB; border-radius: 8px; height: 12px; overflow: hidden;">
-                <div style="width: {{ max(5, $percent) }}%; background: linear-gradient(90deg, #2D9E6A, #34D399); height: 100%; border-radius: 8px;"></div>
+                <div style="width: {{ max(5, $percent) }}%; background: linear-gradient(90deg, #F97316, #FB923C); height: 100%; border-radius: 8px;"></div>
             </div>
         </div>
         @endforeach
@@ -31,7 +31,7 @@
         @php $totalLevelStock = $levels->sum('total_stock'); @endphp
         @foreach($levels as $level)
         @php 
-            $colors = ['A' => '#C7291C', 'B' => '#FF8C42', 'C' => '#2D9E6A', 'Enfermera' => '#3B82F6'];
+            $colors = ['A' => '#C7291C', 'B' => '#FF8C42', 'C' => '#F97316', 'Enfermera' => '#DC2626'];
             $labels = ['A' => 'Especialista', 'B' => 'Hospitalizacion', 'C' => 'Basico', 'Enfermera' => 'Enfermeria'];
             $color = $colors[$level->required_level] ?? '#736860';
             $label = $labels[$level->required_level] ?? $level->required_level;
