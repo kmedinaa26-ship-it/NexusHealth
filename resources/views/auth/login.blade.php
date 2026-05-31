@@ -16,7 +16,7 @@ button{width:100%;padding:0.95rem;background:#1E1A17;color:white;border:none;bor
     <div class="logo">
         <img src="https://z-cdn-media.chatglm.cn/files/e422f718-2f1b-43b1-8d33-abab22ae033a.png?auth_key=1880130553-c96ef22a7ec1475a8024ee420ae894cb-0-01473062212a4e246495206bff72dde3" alt="HealthNexus Logo">
     </div>
-    <h1>Iniciar Sesión</h1><p class="subtitle">Ingresa tus credenciales para acceder al sistema hospitalario.</p>
+    <div style="text-align:center; margin-bottom:1rem;"><img src="http://localhost/images/logo.png" alt="HealthNexus" style="height:60px;"></div><h1>Iniciar Sesión</h1><p class="subtitle">Ingresa tus credenciales para acceder al sistema hospitalario.</p>
     @if($errors->any())<div class="error"><i class="fas fa-exclamation-circle"></i> {{ $errors->first() }}</div>@endif
     <form method="POST" action="{{ route('login') }}">@csrf
         <div class="form-group"><label>Correo Electrónico</label><input type="email" name="email" value="{{ old('email') }}" required autofocus></div>

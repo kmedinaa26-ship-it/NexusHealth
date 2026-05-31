@@ -8,7 +8,7 @@
 <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem;">
     <div style="background:white; padding:1.5rem; border-radius:12px; box-shadow:0 4px 6px rgba(0,0,0,0.04);">
         <h4 style="font-weight:800; margin-bottom:1rem;">Nueva Nota</h4>
-        <form method="POST" action="{{ route('medico.storeEvolution') }}">
+        <form method="POST" action="{{ route('medico.storeEvolucion') }}">
             @csrf
             <div style="margin-bottom:1rem;">
                 <select name="triage_id" style="width:100%; padding:0.75rem; border:1px solid #E2E8F0; border-radius:8px;" required>

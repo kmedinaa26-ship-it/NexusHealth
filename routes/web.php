@@ -20,12 +20,11 @@ Route::middleware(['auth', 'verified', 'role:Médico A,Médico B,Médico C'])->p
     Route::post('/pin-verify', [DoctorController::class, 'validarPin'])->name('pin.verify');
     Route::get('/verify-profile', [DoctorController::class, 'seleccionar'])->name('verify.profile');
 
-    // PACIENTES - CRUD
+    // PACIENTES
     Route::get('/pacientes', [DoctorController::class, 'pacientes'])->name('pacientes');
     Route::post('/pacientes/{id}/asignar', [DoctorController::class, 'asignarPaciente'])->name('asignarPaciente');
     Route::get('/registrar-paciente', [DoctorController::class, 'registrarPaciente'])->name('registrarPaciente');
     Route::post('/registrar-paciente', [DoctorController::class, 'storeNuevoPaciente'])->name('storeNuevoPaciente');
-    Route::post('/pacientes/{id}/transferir', [DoctorController::class, 'transferirPaciente'])->name('transferirPaciente');
     Route::get('/pacientes/{id}/editar', [DoctorController::class, 'editarPaciente'])->name('editarPaciente');
     Route::put('/pacientes/{id}', [DoctorController::class, 'actualizarPaciente'])->name('actualizarPaciente');
     Route::post('/pacientes/{id}/alta', [DoctorController::class, 'darAlta'])->name('darAlta');
@@ -36,12 +35,11 @@ Route::middleware(['auth', 'verified', 'role:Médico A,Médico B,Médico C'])->p
     Route::get('/consulta', [DoctorController::class, 'consulta'])->name('consulta');
     Route::post('/consulta', [DoctorController::class, 'storeConsulta'])->name('storeConsulta');
 
-    // DIAGNÓSTICOS - CRUD
+    // DIAGNÓSTICOS
     Route::get('/diagnosticos', [DoctorController::class, 'diagnosticos'])->name('diagnosticos');
     Route::post('/diagnosticos', [DoctorController::class, 'storeDiagnostico'])->name('storeDiagnostico');
-    Route::put('/diagnosticos/{id}', [DoctorController::class, 'actualizarDiagnostico'])->name('actualizarDiagnostico');
 
-    // RECETAS - CRUD
+    // RECETAS
     Route::get('/recetas', [DoctorController::class, 'recetas'])->name('recetas');
     Route::post('/recetas', [DoctorController::class, 'storeReceta'])->name('storeReceta');
     Route::put('/recetas/{id}/cancelar', [DoctorController::class, 'cancelarReceta'])->name('cancelarReceta');
@@ -49,44 +47,43 @@ Route::middleware(['auth', 'verified', 'role:Médico A,Médico B,Médico C'])->p
     // SIGNOS VITALES
     Route::get('/signos-vitales', [DoctorController::class, 'signosVitales'])->name('signos');
 
-    // ESTUDIOS - CRUD
+    // ESTUDIOS
     Route::get('/estudios', [DoctorController::class, 'estudios'])->name('estudios');
     Route::post('/estudios', [DoctorController::class, 'storeEstudio'])->name('storeEstudio');
     Route::put('/estudios/{id}/resultado', [DoctorController::class, 'resultadoEstudio'])->name('resultadoEstudio');
     Route::delete('/estudios/{id}', [DoctorController::class, 'eliminarEstudio'])->name('eliminarEstudio');
 
-    // HOSPITALIZACIÓN - CRUD
+    // HOSPITALIZACIÓN
     Route::get('/hospitalizacion', [DoctorController::class, 'hospitalizacion'])->name('hospitalizacion');
     Route::post('/hospitalizacion', [DoctorController::class, 'storeHospitalizacion'])->name('storeHospitalizacion');
     Route::post('/hospitalizacion/{id}/alta', [DoctorController::class, 'altaHospitalizacion'])->name('altaHospitalizacion');
-    Route::put('/hospitalizacion/{id}', [DoctorController::class, 'actualizarHospitalizacion'])->name('actualizarHospitalizacion');
 
     // TRATAMIENTOS
     Route::get('/tratamientos', [DoctorController::class, 'tratamientos'])->name('tratamientos');
     Route::post('/tratamientos', [DoctorController::class, 'storeTratamiento'])->name('storeTratamiento');
 
-    // EVOLUCIÓN - CRUD
+    // EVOLUCIÓN
     Route::get('/evolucion', [DoctorController::class, 'evolucion'])->name('evolucion');
-    Route::post('/evolucion', [DoctorController::class, 'storeEvolution'])->name('storeEvolution');
+    Route::post('/evolucion', [DoctorController::class, 'storeEvolucion'])->name('storeEvolucion');
     Route::put('/evolucion/{id}', [DoctorController::class, 'actualizarEvolucion'])->name('actualizarEvolucion');
     Route::delete('/evolucion/{id}', [DoctorController::class, 'eliminarEvolucion'])->name('eliminarEvolucion');
 
     // CAMAS
     Route::get('/camas', [DoctorController::class, 'camas'])->name('camas');
 
-    // SERVICIOS - CRUD
+    // SERVICIOS
     Route::get('/servicios', [DoctorController::class, 'servicios'])->name('servicios');
-    Route::post('/servicios', [DoctorController::class, 'solicitarServicio'])->name('solicitarServicio');
+    Route::post('/servicios', [DoctorController::class, 'storeServicio'])->name('storeServicio');
     Route::put('/servicios/{id}/cancelar', [DoctorController::class, 'cancelarServicio'])->name('cancelarServicio');
 
     // FARMACIA / INSUMOS
     Route::get('/farmacia-stock', [DoctorController::class, 'farmaciaStock'])->name('farmaciaStock');
     Route::get('/insumos', [DoctorController::class, 'insumos'])->name('insumos');
 
-    // DEFUNCIONES / ÓBITOS
+    // DEFUNCIONES
     Route::get('/defunciones', [DoctorController::class, 'defunciones'])->name('defunciones');
     Route::get('/defunciones/{id}', [DoctorController::class, 'verDefuncion'])->name('verDefuncion');
-    Route::post('/defunciones/{id}/certificado', [DoctorController::class, 'generarCertificado'])->name('generarCertificado');
+    Route::get('/defunciones/{id}/pdf', [DoctorController::class, 'certificadoDefuncionPDF'])->name('certificadoDefuncion');
 
     // ALERTAS
     Route::get('/alertas', [DoctorController::class, 'alertas'])->name('alertas');
@@ -95,6 +92,7 @@ Route::middleware(['auth', 'verified', 'role:Médico A,Médico B,Médico C'])->p
 
     // REPORTES
     Route::get('/reportes', [DoctorController::class, 'reportes'])->name('reportes');
+    Route::get('/reportes/pdf', [DoctorController::class, 'exportReportesPDF'])->name('reportes.pdf');
 
     // SOLO MÉDICO A
     Route::get('/uci', [DoctorController::class, 'uci'])->name('uci');
@@ -102,12 +100,9 @@ Route::middleware(['auth', 'verified', 'role:Médico A,Médico B,Médico C'])->p
     Route::get('/controlados', [DoctorController::class, 'controlados'])->name('controlados');
     Route::get('/ia-medica', [DoctorController::class, 'iaMedica'])->name('iaMedica');
     Route::get('/derivaciones', [DoctorController::class, 'derivaciones'])->name('derivaciones');
-    Route::post('/derivaciones', [DoctorController::class, 'storeDerivacion'])->name('storeDerivacion');
-    Route::get('/defunciones/{id}/certificado-pdf', [DoctorController::class, 'generarCertificado'])->name('certificadoDefuncion');
-        Route::get('/auditoria/export/pdf', [SuperAdminController::class, 'exportAuditPDF'])->name('auditoria.export.pdf');
+    Route::get('/derivaciones/{id}/pdf', [DoctorController::class, 'exportDerivacionPDF'])->name('derivacion.pdf');    Route::get('/auditoria/export/pdf', [SuperAdminController::class, 'exportAuditPDF'])->name('auditoria.export.pdf');
     Route::get('/auditoria/export/csv', [SuperAdminController::class, 'exportAuditCSV'])->name('auditoria.export.csv');
     Route::get('/auditoria/export/json', [SuperAdminController::class, 'exportAuditJSON'])->name('auditoria.export.json');
-    Route::get('/auditoria', [DoctorController::class, 'auditoria'])->name('auditoria');
 });
 
 // ==========================================
@@ -118,14 +113,14 @@ Route::middleware(['auth', 'verified', 'role:Enfermera A,Enfermera B,Enfermera C
     Route::get('/triage', [NurseController::class, 'triage'])->name('triage');
     Route::post('/triage', [NurseController::class, 'storeTriage'])->name('storeTriage');
     Route::post('/triage/{id}/status', [NurseController::class, 'updateTriageStatus'])->name('updateTriageStatus');
-    Route::get('/signos-vitales', [NurseController::class, 'signosVitales'])->name('signos');
+    Route::get('/signos-vitales', [NurseController::class, 'signosVitales'])->name('signosVitales');
     Route::post('/signos-vitales', [NurseController::class, 'storeVitals'])->name('storeVitals');
     Route::get('/pacientes', [NurseController::class, 'pacientes'])->name('pacientes');
     Route::post('/pacientes/{id}/enviar', [NurseController::class, 'enviarA'])->name('enviarA');
     Route::get('/hospitalizacion', [NurseController::class, 'hospitalizacion'])->name('hospitalizacion');
     Route::post('/hospitalizacion', [NurseController::class, 'storeHospitalization'])->name('storeHospitalization');
     Route::get('/evolucion', [NurseController::class, 'evolucion'])->name('evolucion');
-    Route::post('/evolucion', [NurseController::class, 'storeEvolution'])->name('storeEvolution');
+    Route::post('/evolucion', [NurseController::class, 'storeEvolution'])->name('storeEvolucion');
     Route::get('/alertas', [NurseController::class, 'alertas'])->name('alertas');
     Route::post('/alertas/{id}/read', [NurseController::class, 'markAlertRead'])->name('markAlertRead');
     Route::get('/medicamentos', [NurseController::class, 'medicamentos'])->name('medicamentos');
@@ -159,8 +154,6 @@ Route::middleware(['auth', 'verified', 'role:Farmacéutico,Admin Farmacia'])->pr
     Route::get('/crash-carts', [PharmacyController::class, 'crashCarts'])->name('crashCarts');
     Route::post('/crash-carts/{id}/verificar', [PharmacyController::class, 'verificarCart'])->name('verificarCart');
     Route::get('/historial-paciente/{id}', [PharmacyController::class, 'historialPaciente'])->name('historialPaciente');
-
-    // Rutas adicionales referenciadas en blades
     Route::get('/anomalias', [PharmacyController::class, 'alertasStock'])->name('anomalias');
     Route::get('/carga', [PharmacyController::class, 'reportes'])->name('carga');
     Route::post('/carga', [PharmacyController::class, 'storeMedication'])->name('uploadCSV');
@@ -205,7 +198,7 @@ Route::middleware(['auth', 'verified', 'role:SuperAdmin,Administrador Hospitalar
     Route::get('/farmacia', [SuperAdminController::class, 'farmacia'])->name('farmacia');
     Route::post('/farmacia/prescribe', [SuperAdminController::class, 'prescribe'])->name('farmacia.prescribe');
     Route::post('/farmacia', [SuperAdminController::class, 'storeMedication'])->name('storeMedication');
-        Route::post('/finanzas/facturas', [SuperAdminController::class, 'storeInvoice'])->name('finanzas.storeInvoice');
+    Route::post('/finanzas/facturas', [SuperAdminController::class, 'storeInvoice'])->name('finanzas.storeInvoice');
     Route::put('/finanzas/facturas/{id}', [SuperAdminController::class, 'updateInvoice'])->name('finanzas.updateInvoice');
     Route::delete('/finanzas/facturas/{id}', [SuperAdminController::class, 'deleteInvoice'])->name('finanzas.deleteInvoice');
     Route::post('/finanzas/seguros', [SuperAdminController::class, 'storeInsurance'])->name('finanzas.storeInsurance');
@@ -218,7 +211,7 @@ Route::middleware(['auth', 'verified', 'role:SuperAdmin,Administrador Hospitalar
     Route::put('/finanzas/{invoice}/cancel', [SuperAdminController::class, 'cancelInvoice'])->name('finanzas.cancel');
     Route::get('/finanzas/export/pdf', [SuperAdminController::class, 'exportFinancePDF'])->name('finanzas.export.pdf');
     Route::get('/finanzas/export/csv', [SuperAdminController::class, 'exportFinanceCSV'])->name('finanzas.export.csv');
-        Route::get('/auditoria/export/pdf', [SuperAdminController::class, 'exportAuditPDF'])->name('auditoria.export.pdf');
+    Route::get('/auditoria/export/pdf', [SuperAdminController::class, 'exportAuditPDF'])->name('auditoria.export.pdf');
     Route::get('/auditoria/export/csv', [SuperAdminController::class, 'exportAuditCSV'])->name('auditoria.export.csv');
     Route::get('/auditoria/export/json', [SuperAdminController::class, 'exportAuditJSON'])->name('auditoria.export.json');
     Route::get('/auditoria', [SuperAdminController::class, 'auditoria'])->name('auditoria');
@@ -235,8 +228,6 @@ Route::middleware(['auth', 'verified', 'role:SuperAdmin,Administrador Hospitalar
     Route::delete('/proveedores/{id}', [SuperAdminController::class, 'deleteUser'])->name('deleteProvider');
     Route::put('/camas/{id}/status', [SuperAdminController::class, 'toggleStatus'])->name('updateBedStatus');
     Route::get('/mapa-calor', [SuperAdminController::class, 'mapaCalor'])->name('mapaCalor');
-
-    // Rutas adicionales referenciadas en blades
     Route::get('/camas', [SuperAdminController::class, 'camas'])->name('camas');
     Route::post('/camas', [SuperAdminController::class, 'storeBed'])->name('storeBed');
     Route::post('/proveedores', [SuperAdminController::class, 'storeProvider'])->name('storeProvider');
@@ -246,7 +237,7 @@ Route::middleware(['auth', 'verified', 'role:SuperAdmin,Administrador Hospitalar
     Route::get('/reportes/personal', [SuperAdminController::class, 'reportPersonal'])->name('report.personal');
 });
 
-// Profile routes (referenciadas en blades)
+// Profile routes
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [SuperAdminController::class, 'dashboard'])->name('profile.edit');
     Route::put('/profile', function () { return back(); })->name('profile.update');

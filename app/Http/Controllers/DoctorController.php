@@ -71,16 +71,12 @@ class DoctorController extends Controller
             session(['doctor_profile' => $profileMap[$pin], 'doctor_name' => $nameMap[$pin]]);
             return redirect()->route('medico.dashboard');
         }
-        return back()->with('error', 'PIN incorrecto. Intenta de nuevo.');
+        return back()->with('error', 'PIN incorrecto.');
     }
 
     public function validarPin(Request $request)
     {
-        $pin = $request->pin;
-        if (in_array($pin, ['1111', '2222', '3333'])) {
-            return response()->json(['success' => true]);
-        }
-        return response()->json(['success' => false]);
+        return response()->json(['success' => in_array($request->pin, ['1111', '2222', '3333'])]);
     }
 
     // PACIENTES
@@ -92,16 +88,16 @@ class DoctorController extends Controller
         $medicos = $isA ? User::whereIn('role', ['Médico A', 'Médico B', 'Médico C'])->where('status', 1)->get() : collect();
 
         if ($isA) {
-            $pacientes = Triage::whereIn('status', ['En Espera', 'En Atención', 'Hospitalizado'])->orderBy('triage_level', 'asc')->get();
+            $pacientes = Triage::whereIn('status', ['En Espera', 'En Atención', 'Hospitalizado'])->orderBy('triage_level', 'asc')->paginate(25);
         } else {
-            $pacientes = Triage::where('assigned_doctor', $uid)->whereIn('status', ['En Atención', 'Hospitalizado'])->orderBy('triage_level', 'asc')->get();
+            $pacientes = Triage::where('assigned_doctor', $uid)->whereIn('status', ['En Atención', 'Hospitalizado'])->orderBy('triage_level', 'asc')->paginate(25);
         }
         return view('medico.pacientes', compact('pacientes', 'role', 'isA', 'medicos'));
     }
 
     public function registrarPaciente()
     {
-        $role = session('doctor_profile', 'Médico C');
+        $role = session('doctor_profile');
         if ($role === 'Médico C') return redirect()->route('medico.dashboard')->with('error', 'Sin acceso');
         $medicos = User::whereIn('role', ['Médico A', 'Médico B', 'Médico C'])->where('status', 1)->get();
         return view('medico.registrar-paciente', compact('role', 'medicos'));
@@ -109,77 +105,62 @@ class DoctorController extends Controller
 
     public function storeNuevoPaciente(Request $request)
     {
-        $role = session('doctor_profile', 'Médico C');
-        if ($role === 'Médico C') return redirect()->route('medico.dashboard')->with('error', 'Sin acceso');
-
+        if (session('doctor_profile') === 'Médico C') return redirect()->route('medico.dashboard')->with('error', 'Sin acceso');
         $request->validate([
-            'patient_name' => 'required',
-            'age' => 'required|numeric',
-            'gender' => 'required',
-            'chief_complaint' => 'required',
-            'triage_level' => 'required',
+            'patient_name' => 'required', 'age' => 'required|numeric',
+            'gender' => 'required', 'chief_complaint' => 'required', 'triage_level' => 'required',
         ]);
-
         $triage = Triage::create([
-            'patient_name' => $request->patient_name,
-            'age' => $request->age,
-            'gender' => $request->gender,
-            'chief_complaint' => $request->chief_complaint,
-            'symptoms' => $request->symptoms,
-            'allergies' => $request->allergies,
-            'triage_level' => $request->triage_level,
-            'status' => 'En Espera',
+            'patient_name' => $request->patient_name, 'age' => $request->age,
+            'gender' => $request->gender, 'chief_complaint' => $request->chief_complaint,
+            'symptoms' => $request->symptoms, 'allergies' => $request->allergies,
+            'triage_level' => $request->triage_level, 'status' => 'En Espera',
             'assigned_doctor' => $request->assigned_doctor ?? Auth::id(),
-            'blood_type' => $request->blood_type,
-            'insurance' => $request->insurance,
+            'blood_type' => $request->blood_type, 'insurance' => $request->insurance,
             'emergency_contact' => $request->emergency_contact,
-            'diagnostico' => $request->diagnostico,
-            'cie10' => $request->cie10,
+            'diagnostico' => $request->diagnostico, 'cie10' => $request->cie10,
             'doctor_notes' => $request->doctor_notes,
         ]);
-
         if ($request->triage_level === 'Rojo') {
             MedicalAlert::create([
                 'type' => 'Paciente Crítico',
-                'message' => 'Nuevo paciente TRIAGE ROJO: ' . $request->patient_name . ' - ' . $request->chief_complaint,
-                'severity' => 'Crítica',
-                'triage_id' => $triage->id,
-                'nurse_id' => Auth::id(),
-                'is_read' => false,
+                'message' => 'TRIAGE ROJO: ' . $request->patient_name . ' - ' . $request->chief_complaint,
+                'severity' => 'Crítica', 'triage_id' => $triage->id,
+                'nurse_id' => Auth::id(), 'is_read' => false,
             ]);
         }
-
-        return redirect()->route('medico.pacientes')->with('success', 'Paciente registrado: ' . $request->patient_name);
+        return redirect()->route('medico.pacientes')->with('success', 'Paciente registrado');
     }
 
     public function editarPaciente($id)
     {
-        $role = session('doctor_profile', 'Médico C');
+        $role = session('doctor_profile');
         $paciente = Triage::findOrFail($id);
         $medicos = User::whereIn('role', ['Médico A', 'Médico B', 'Médico C'])->where('status', 1)->get();
         $hosp = Hospitalization::where('triage_id', $id)->where('status', 'Activa')->first();
-        return view('medico.editar-paciente', compact('paciente', 'role', 'medicos', 'hosp'));
+        return view('medico.editar-paciente', compact('paciente', 'medicos', 'hosp', 'role'));
     }
 
     public function actualizarPaciente(Request $request, $id)
     {
-        $p = Triage::findOrFail($id);
-        $p->update($request->only(['patient_name', 'age', 'gender', 'chief_complaint', 'diagnostico', 'cie10', 'tratamiento', 'doctor_notes', 'status']));
-        return redirect()->route('medico.pacientes')->with('success', 'Paciente actualizado');
+        Triage::findOrFail($id)->update($request->only([
+            'patient_name', 'age', 'gender', 'chief_complaint',
+            'diagnostico', 'cie10', 'tratamiento', 'doctor_notes', 'status'
+        ]));
+        return redirect()->route('medico.pacientes')->with('success', 'Actualizado');
     }
 
     public function asignarPaciente(Request $request, $id)
     {
         Triage::findOrFail($id)->update(['assigned_doctor' => $request->doctor_id, 'status' => 'En Atención']);
-        return back()->with('success', 'Paciente asignado');
+        return back()->with('success', 'Asignado');
     }
 
     public function darAlta(Request $request, $id)
     {
         $p = Triage::findOrFail($id);
         $p->update([
-            'status' => 'Alta',
-            'discharge_date' => now(),
+            'status' => 'Alta', 'discharge_date' => now(),
             'discharge_type' => 'Alta Hospitalaria',
             'discharge_doctor_id' => Auth::id(),
             'discharge_notes' => $request->discharge_notes ?? 'Alta médica',
@@ -187,34 +168,48 @@ class DoctorController extends Controller
         $hosp = Hospitalization::where('triage_id', $id)->where('status', 'Activa')->first();
         if ($hosp) {
             $hosp->update(['status' => 'Alta', 'discharge_date' => now()]);
-            Bed::find($hosp->bed_id)?->update(['status' => 'Disponible']);
+            $bed = Bed::find($hosp->bed_id);
+            if ($bed) $bed->update(['status' => 'Disponible']);
         }
         return back()->with('success', 'Paciente dado de alta');
     }
 
     // CONSULTA
+    public function storeConsulta(Request $request)
+    {
+        $request->validate(["paciente_id" => "required", "notas" => "required"]);
+        $p = Triage::findOrFail($request->paciente_id);
+        $p->update(["doctor_notes" => $request->notas, "status" => "En Atención"]);
+        return back()->with("success", "Consulta registrada");
+    }
+
     public function consulta()
     {
-        $role = session('doctor_profile', 'Médico C');
-        $uid = Auth::id();
-        $pacientes = Triage::where('assigned_doctor', $uid)->whereIn('status', ['En Atención', 'En Espera'])->orderBy('created_at', 'desc')->get();
+        $role = session('doctor_profile');
+        $pacientes = Triage::where('assigned_doctor', Auth::id())
+            ->whereIn('status', ['En Atención', 'En Espera'])
+            ->orderBy('created_at', 'desc')->paginate(25);
         return view('medico.consulta', compact('pacientes', 'role'));
     }
 
     // DIAGNÓSTICOS
     public function diagnosticos()
     {
-        $role = session('doctor_profile', 'Médico C');
-        $uid = Auth::id();
-        $pacientes = Triage::where('assigned_doctor', $uid)->whereIn('status', ['En Atención', 'Hospitalizado'])->orderBy('created_at', 'desc')->get();
+        $role = session('doctor_profile');
+        $pacientes = Triage::where('assigned_doctor', Auth::id())
+            ->whereIn('status', ['En Atención', 'Hospitalizado'])
+            ->orderBy('created_at', 'desc')->paginate(25);
         return view('medico.diagnosticos', compact('pacientes', 'role'));
     }
 
     public function storeDiagnostico(Request $request)
     {
-        $p = Triage::findOrFail($request->triage_id);
-        $p->update(['diagnostico' => $request->diagnostico, 'cie10' => $request->cie10, 'doctor_notes' => $request->doctor_notes]);
-        return back()->with('success', 'Diagnóstico guardado');
+        Triage::findOrFail($request->triage_id)->update([
+            'diagnostico' => $request->diagnostico,
+            'cie10' => $request->cie10,
+            'doctor_notes' => $request->doctor_notes,
+        ]);
+        return back()->with('success', 'Guardado');
     }
 
     // RECETAS
@@ -226,31 +221,31 @@ class DoctorController extends Controller
         $isA = $role === 'Médico A';
 
         $medQuery = Medication::orderBy('name');
-        if ($isC) $medQuery->where('required_level', 'C');
+        if (!$isA && $isC) $medQuery->where('required_level', 'C');
         elseif (!$isA) $medQuery->where('required_level', '!=', 'A');
-        $medicamentos = $medQuery->get();
+        // Médico A ve TODOS los medicamentos sin restricción
+        $medicamentos = $medQuery->paginate(30);
 
-        $pacientes = Triage::where('assigned_doctor', $uid)->whereIn('status', ['En Atención', 'Hospitalizado'])->get();
-        $misRecetas = \DB::table('prescriptions')->where('doctor_id', $uid)->orderBy('created_at', 'desc')->take(15)->get();
+        $pacientes = Triage::where('assigned_doctor', $uid)
+            ->whereIn('status', ['En Atención', 'Hospitalizado'])->paginate(25);
+
+        $misRecetas = \DB::table('prescriptions')
+            ->leftJoin('triages', 'prescriptions.triage_id', '=', 'triages.id')
+            ->leftJoin('medications', 'prescriptions.medication_id', '=', 'medications.id')
+            ->where('prescriptions.doctor_id', $uid)
+            ->select('prescriptions.*', 'triages.patient_name', 'medications.name as medication_name')
+            ->orderBy('prescriptions.created_at', 'desc')->paginate(20);
 
         return view('medico.recetas', compact('medicamentos', 'pacientes', 'misRecetas', 'role', 'isC', 'isA'));
     }
 
     public function storeReceta(Request $request)
     {
-        $role = session('doctor_profile', 'Médico C');
-        $med = Medication::find($request->medication_id);
-        if ($role === 'Médico C' && $med && $med->required_level !== 'C') {
-            return back()->with('error', 'No puedes recetar este medicamento');
-        }
-        if ($role === 'Médico B' && $med && $med->required_level === 'A') {
-            return back()->with('error', 'Solo Médico A puede recetar controlados');
-        }
-
         \DB::table('prescriptions')->insert([
             'triage_id' => $request->triage_id,
             'medication_id' => $request->medication_id,
             'doctor_id' => Auth::id(),
+            'quantity' => $request->quantity ?? 1,
             'dosis' => $request->dosis,
             'frecuencia' => $request->frecuencia,
             'duracion' => $request->duracion,
@@ -265,24 +260,25 @@ class DoctorController extends Controller
     public function cancelarReceta($id)
     {
         \DB::table('prescriptions')->where('id', $id)->update(['status' => 'Cancelada', 'updated_at' => now()]);
-        return back()->with('success', 'Receta cancelada');
+        return back()->with('success', 'Cancelada');
     }
 
     // SIGNOS VITALES
-    public function signos()
+    public function signosVitales()
     {
-        $role = session('doctor_profile', 'Médico C');
-        $vitals = VitalSign::orderBy('created_at', 'desc')->take(25)->get();
+        $role = session('doctor_profile');
+        $vitals = VitalSign::orderBy('created_at', 'desc')->paginate(25);
         return view('medico.signos', compact('vitals', 'role'));
     }
 
     // ESTUDIOS
     public function estudios()
     {
-        $role = session('doctor_profile', 'Médico C');
-        $uid = Auth::id();
-        $pacientes = Triage::where('assigned_doctor', $uid)->whereIn('status', ['En Atención', 'Hospitalizado'])->get();
-        $estudios = \DB::table('medical_studies')->where('doctor_id', $uid)->orderBy('created_at', 'desc')->take(20)->get();
+        $role = session('doctor_profile');
+        $pacientes = Triage::where('assigned_doctor', Auth::id())
+            ->whereIn('status', ['En Atención', 'Hospitalizado'])->paginate(25);
+        $estudios = \DB::table('medical_studies')->where('doctor_id', Auth::id())
+            ->orderBy('created_at', 'desc')->paginate(20);
         return view('medico.estudios', compact('pacientes', 'estudios', 'role'));
     }
 
@@ -300,8 +296,7 @@ class DoctorController extends Controller
     public function resultadoEstudio(Request $request, $id)
     {
         \DB::table('medical_studies')->where('id', $id)->update([
-            'status' => 'Completado', 'notas' => $request->resultado,
-            'updated_at' => now(),
+            'status' => 'Completado', 'notas' => $request->resultado, 'updated_at' => now(),
         ]);
         return back()->with('success', 'Resultado registrado');
     }
@@ -309,26 +304,36 @@ class DoctorController extends Controller
     public function eliminarEstudio($id)
     {
         \DB::table('medical_studies')->where('id', $id)->delete();
-        return back()->with('success', 'Estudio eliminado');
+        return back()->with('success', 'Eliminado');
     }
 
     // TRATAMIENTOS
+    
+    public function storeTratamiento(Request $request)
+    {
+        $request->validate(['triage_id' => 'required', 'tratamiento' => 'required']);
+        $p = Triage::findOrFail($request->triage_id);
+        $p->update(['tratamiento' => $request->tratamiento, 'doctor_notes' => $request->notas]);
+        return back()->with('success', 'Tratamiento guardado');
+    }
     public function tratamientos()
     {
-        if (session('doctor_profile') !== 'Médico A') return redirect()->route('medico.dashboard')->with('error', 'Solo Médico A');
-        $uid = Auth::id();
-        $pacientes = Triage::where('assigned_doctor', $uid)->whereIn('status', ['En Atención', 'Hospitalizado'])->get();
-        return view('medico.tratamientos', compact('pacientes'));
+        $role = session('doctor_profile');
+        if ($role !== 'Médico A') return redirect()->route('medico.dashboard')->with('error', 'Solo Médico A');
+        $pacientes = Triage::where('assigned_doctor', Auth::id())
+            ->whereIn('status', ['En Atención', 'Hospitalizado'])->paginate(25);
+        return view('medico.tratamientos', compact('pacientes', 'role'));
     }
 
     // HOSPITALIZACIÓN
     public function hospitalizacion()
     {
-        $role = session('doctor_profile', 'Médico C');
+        $role = session('doctor_profile');
         if ($role === 'Médico C') return redirect()->route('medico.dashboard')->with('error', 'Sin acceso');
-        $hospitalizados = Hospitalization::where('status', 'Activa')->orderBy('admission_date', 'desc')->get();
-        $camas = Bed::orderBy('floor', 'asc')->orderBy('room_number', 'asc')->get();
-        $pacientes = Triage::whereIn('status', ['En Atención', 'En Espera'])->get();
+        $hospitalizados = Hospitalization::where('status', 'Activa')
+            ->orderBy('admission_date', 'desc')->paginate(20);
+        $camas = Bed::orderBy('floor', 'asc')->get();
+        $pacientes = Triage::whereIn('status', ['En Atención', 'En Espera'])->paginate(25);
         return view('medico.hospitalizacion', compact('hospitalizados', 'camas', 'pacientes', 'role'));
     }
 
@@ -336,11 +341,12 @@ class DoctorController extends Controller
     {
         Hospitalization::create([
             'triage_id' => $request->triage_id, 'bed_id' => $request->bed_id,
-            'admission_date' => now(), 'diagnostico' => $request->diagnostico,
-            'status' => 'Activa',
+            'admission_date' => now(), 'diagnostico' => $request->diagnostico, 'status' => 'Activa',
         ]);
-        Bed::find($request->bed_id)?->update(['status' => 'Ocupada']);
-        Triage::find($request->triage_id)?->update(['status' => 'Hospitalizado']);
+        $bed = Bed::find($request->bed_id);
+        if ($bed) $bed->update(['status' => 'Ocupada']);
+        $triage = Triage::find($request->triage_id);
+        if ($triage) $triage->update(['status' => 'Hospitalizado']);
         return back()->with('success', 'Paciente hospitalizado');
     }
 
@@ -348,30 +354,38 @@ class DoctorController extends Controller
     {
         $hosp = Hospitalization::findOrFail($id);
         $hosp->update(['status' => 'Alta', 'discharge_date' => now()]);
-        Bed::find($hosp->bed_id)?->update(['status' => 'Disponible']);
-        Triage::find($hosp->triage_id)?->update(['status' => 'Alta', 'discharge_date' => now(), 'discharge_type' => 'Alta', 'discharge_doctor_id' => Auth::id()]);
+        $bed = Bed::find($hosp->bed_id);
+        if ($bed) $bed->update(['status' => 'Disponible']);
+        $triage = Triage::find($hosp->triage_id);
+        if ($triage) {
+            $triage->update([
+                'status' => 'Alta', 'discharge_date' => now(),
+                'discharge_type' => 'Alta', 'discharge_doctor_id' => Auth::id(),
+            ]);
+        }
         return back()->with('success', 'Paciente dado de alta');
     }
 
     // CAMAS
     public function camas()
     {
-        $role = session('doctor_profile', 'Médico C');
+        $role = session('doctor_profile');
         if ($role === 'Médico C') return redirect()->route('medico.dashboard')->with('error', 'Sin acceso');
-        $camas = Bed::orderBy('floor', 'asc')->orderBy('room_number', 'asc')->get();
-        $hospitalizados = Hospitalization::where('status', 'Activa')->get();
-        return view('medico.camas', compact('camas', 'hospitalizados', 'role'));
+        $camas = Bed::orderBy('floor', 'asc')->orderBy('room_number', 'asc')->paginate(40);
+        $hospitalizaciones = Hospitalization::where('status', 'Activa')->get();
+        return view('medico.camas', compact('camas', 'hospitalizaciones', 'role'));
     }
 
     // SERVICIOS
     public function servicios()
     {
-        $role = session('doctor_profile', 'Médico C');
+        $role = session('doctor_profile');
         if ($role === 'Médico C') return redirect()->route('medico.dashboard')->with('error', 'Sin acceso');
-        $uid = Auth::id();
-        $pacientes = Triage::where('assigned_doctor', $uid)->whereIn('status', ['En Atención', 'Hospitalizado'])->get();
-        $servicios = \DB::table('service_requests')->where('doctor_id', $uid)->orderBy('created_at', 'desc')->take(20)->get();
-        return view('medico.servicios', compact('pacientes', 'servicios', 'role'));
+        $pacientes = Triage::where('assigned_doctor', Auth::id())
+            ->whereIn('status', ['En Atención', 'Hospitalizado'])->paginate(25);
+        $solicitudes = \DB::table('service_requests')->where('doctor_id', Auth::id())
+            ->orderBy('created_at', 'desc')->paginate(20);
+        return view('medico.servicios', compact('pacientes', 'solicitudes', 'role'));
     }
 
     public function storeServicio(Request $request)
@@ -394,28 +408,29 @@ class DoctorController extends Controller
     // FARMACIA STOCK
     public function farmaciaStock()
     {
-        $role = session('doctor_profile', 'Médico C');
+        $role = session('doctor_profile');
         if ($role === 'Médico C') return redirect()->route('medico.dashboard')->with('error', 'Sin acceso');
-        $medicamentos = Medication::orderBy('name')->get();
+        $medicamentos = Medication::orderBy('name')->paginate(30);
         return view('medico.farmacia-stock', compact('medicamentos', 'role'));
     }
 
     // INSUMOS
     public function insumos()
     {
-        $role = session('doctor_profile', 'Médico C');
+        $role = session('doctor_profile');
         if ($role !== 'Médico A') return redirect()->route('medico.dashboard')->with('error', 'Solo Médico A');
-        $insumos = Medication::where('category', 'Insumo')->orWhere('category', 'Material')->orderBy('name')->get();
+        $insumos = Medication::orderBy('name')->paginate(30);
         return view('medico.insumos', compact('insumos', 'role'));
     }
 
     // EVOLUCIÓN
     public function evolucion()
     {
-        $role = session('doctor_profile', 'Médico C');
+        $role = session('doctor_profile');
         $uid = Auth::id();
-        $pacientes = Triage::where('assigned_doctor', $uid)->whereIn('status', ['En Atención', 'Hospitalizado'])->get();
-        $evolutions = NurseEvolution::orderBy('created_at', 'desc')->take(30)->get();
+        $pacientes = Triage::where('assigned_doctor', $uid)
+            ->whereIn('status', ['En Atención', 'Hospitalizado'])->paginate(25);
+        $evolutions = NurseEvolution::orderBy('created_at', 'desc')->paginate(20);
         return view('medico.evolucion', compact('pacientes', 'evolutions', 'role'));
     }
 
@@ -443,11 +458,13 @@ class DoctorController extends Controller
     // DEFUNCIONES
     public function defunciones()
     {
-        $role = session('doctor_profile', 'Médico C');
+        $role = session('doctor_profile');
         if ($role !== 'Médico A') return redirect()->route('medico.dashboard')->with('error', 'Solo Médico A');
-        $defunciones = \DB::table('patient_deaths')->orderBy('death_time', 'desc')->get();
+        $defunciones = \DB::table('patient_deaths')->orderBy('death_time', 'desc')->paginate(20);
         $totalMes = \DB::table('patient_deaths')->whereMonth('death_time', now()->month)->count();
-        $causas = \DB::table('patient_deaths')->select('cause_of_death', \DB::raw('count(*) as total'))->groupBy('cause_of_death')->orderBy('total', 'desc')->limit(5)->get();
+        $causas = \DB::table('patient_deaths')
+            ->select('cause_of_death', \DB::raw('count(*) as total'))
+            ->groupBy('cause_of_death')->orderBy('total', 'desc')->limit(5)->get();
         return view('medico.defunciones', compact('defunciones', 'totalMes', 'causas', 'role'));
     }
 
@@ -479,7 +496,8 @@ class DoctorController extends Controller
         $hosp = Hospitalization::where('triage_id', $id)->where('status', 'Activa')->first();
         if ($hosp) {
             $hosp->update(['status' => 'Defunción', 'discharge_date' => now()]);
-            Bed::find($hosp->bed_id)?->update(['status' => 'Disponible']);
+            $bed = Bed::find($hosp->bed_id);
+            if ($bed) $bed->update(['status' => 'Disponible']);
         }
 
         return redirect()->route('medico.defunciones')->with('success', 'Defunción registrada. Certificado: ' . $certNum);
@@ -487,7 +505,7 @@ class DoctorController extends Controller
 
     public function verDefuncion($id)
     {
-        $role = session('doctor_profile', 'Médico C');
+        $role = session('doctor_profile');
         if ($role !== 'Médico A') return redirect()->route('medico.dashboard')->with('error', 'Solo Médico A');
         $defuncion = \DB::table('patient_deaths')->where('id', $id)->first();
         $paciente = Triage::find($defuncion->triage_id);
@@ -495,12 +513,13 @@ class DoctorController extends Controller
         return view('medico.ver-defuncion', compact('defuncion', 'paciente', 'doctor', 'role'));
     }
 
-    public function certificadoDefuncion($id)
+    public function certificadoDefuncionPDF($id)
     {
         $defuncion = \DB::table('patient_deaths')->where('id', $id)->first();
         $paciente = Triage::find($defuncion->triage_id);
         $doctor = User::find($defuncion->doctor_id);
-        return view('medico.certificado-defuncion', compact('defuncion', 'paciente', 'doctor'));
+        $pdf = \PDF::loadView('medico.pdf.defuncion', compact('defuncion', 'paciente', 'doctor'));
+        return $pdf->download('Acta_Defuncion_' . $paciente->patient_name . '.pdf');
     }
 
     public function derivarPaciente(Request $request, $id)
@@ -512,66 +531,127 @@ class DoctorController extends Controller
             'hospital_destino' => $request->hospital_destino, 'motivo' => $request->motivo,
             'status' => 'Pendiente', 'created_at' => now(), 'updated_at' => now(),
         ]);
-        Triage::find($id)?->update(['status' => 'Derivado', 'discharge_date' => now(), 'discharge_type' => 'Derivación', 'discharge_doctor_id' => Auth::id()]);
-        return redirect()->route('medico.pacientes')->with('success', 'Paciente derivado');
+        $triage = Triage::find($id);
+        if ($triage) {
+            $triage->update([
+                'status' => 'Derivado', 'discharge_date' => now(),
+                'discharge_type' => 'Derivación', 'discharge_doctor_id' => Auth::id(),
+            ]);
+        }
+        return redirect()->route('medico.derivaciones')->with('success', 'Paciente derivado exitosamente. Puede generar el Pase de Salida en el historial.');
     }
 
     // UCI
     public function uci()
     {
-        if (session('doctor_profile') !== 'Médico A') return redirect()->route('medico.dashboard')->with('error', 'Solo Médico A');
-        $criticalPatients = Triage::where('triage_level', 'Rojo')->whereIn('status', ['En Atención', 'Hospitalizado'])->get();
+        $role = session('doctor_profile');
+        if ($role !== 'Médico A') return redirect()->route('medico.dashboard')->with('error', 'Solo Médico A');
+        $criticalPatients = Triage::where('triage_level', 'Rojo')
+            ->whereIn('status', ['En Atención', 'Hospitalizado'])->paginate(25);
         $uciBeds = Bed::where('type', 'UCI')->get();
-        return view('medico.uci', compact('criticalPatients', 'uciBeds'));
+        return view('medico.uci', compact('criticalPatients', 'uciBeds', 'role'));
     }
 
     public function quirofano()
     {
-        if (session('doctor_profile') !== 'Médico A') return redirect()->route('medico.dashboard')->with('error', 'Solo Médico A');
-        $scheduled = Hospitalization::where('status', 'Activa')->whereHas('bed', fn($q) => $q->where('type', 'Quirófano'))->get();
-        return view('medico.quirofano', compact('scheduled'));
+        $role = session('doctor_profile');
+        if ($role !== 'Médico A') return redirect()->route('medico.dashboard')->with('error', 'Solo Médico A');
+        $scheduled = Hospitalization::where('status', 'Activa')
+            ->whereHas('bed', function($q) { $q->where('type', 'Quirófano'); })
+            ->paginate(20);
+        return view('medico.quirofano', compact('scheduled', 'role'));
     }
 
     public function controlados()
     {
-        if (session('doctor_profile') !== 'Médico A') return redirect()->route('medico.dashboard')->with('error', 'Solo Médico A');
-        $meds = Medication::where('required_level', 'A')->orderBy('name')->get();
-        return view('medico.controlados', compact('meds'));
+        $role = session('doctor_profile');
+        if ($role !== 'Médico A') return redirect()->route('medico.dashboard')->with('error', 'Solo Médico A');
+        $meds = Medication::where('required_level', 'A')->orderBy('name')->paginate(30);
+        return view('medico.controlados', compact('meds', 'role'));
     }
 
     public function iaMedica()
     {
-        if (session('doctor_profile') !== 'Médico A') return redirect()->route('medico.dashboard')->with('error', 'Solo Médico A');
         return view('medico.ia-medica', ['role' => 'Médico A']);
     }
 
     public function derivaciones()
     {
-        if (session('doctor_profile') !== 'Médico A') return redirect()->route('medico.dashboard')->with('error', 'Solo Médico A');
-        $pacientes = Triage::whereIn('status', ['En Atención', 'Hospitalizado'])->get();
-        $derivaciones = \DB::table('derivations')->orderBy('created_at', 'desc')->take(20)->get();
-        return view('medico.derivaciones', compact('pacientes', 'derivaciones'));
+        $role = session('doctor_profile');
+        if ($role !== 'Médico A') return redirect()->route('medico.dashboard')->with('error', 'Solo Médico A');
+        $pacientes = Triage::whereIn('status', ['En Atención', 'Hospitalizado'])->paginate(25);
+        $derivaciones = \DB::table('derivations')
+            ->leftJoin('triages', 'derivations.triage_id', '=', 'triages.id')
+            ->leftJoin('users', 'derivations.doctor_id', '=', 'users.id')
+            ->select('derivations.*', 'triages.patient_name', 'triages.age', 'triages.triage_level', 'triages.diagnostico', 'users.name as doctor_name')
+            ->orderBy('derivations.created_at', 'desc')
+            ->paginate(20);
+        $ultimaDerivacion = \DB::table('derivations')
+            ->leftJoin('triages', 'derivations.triage_id', '=', 'triages.id')
+            ->select('derivations.*', 'triages.patient_name', 'triages.age', 'triages.triage_level', 'triages.diagnostico')
+            ->orderBy('derivations.created_at', 'desc')
+            ->first();
+        $hospitales = [
+            'Hospital General de la Zona' => 'Hospital General',
+            'Centro Médico Nacional' => 'Centro Médico',
+            'Hospital Infantil Regional' => 'Hospital Infantil',
+            'Hospital Regional Alta Especialidad' => 'Hospital Regional',
+            'Clínica Especializada' => 'Clínica Especializada',
+        ];
+        return view('medico.derivaciones', compact('pacientes', 'derivaciones', 'hospitales', 'role', 'ultimaDerivacion'));
     }
 
-    public function auditoria()
+    public function exportDerivacionPDF($id)
     {
-        if (session('doctor_profile') !== 'Médico A') return redirect()->route('medico.dashboard')->with('error', 'Solo Médico A');
-        return view('medico.auditoria', ['role' => 'Médico A']);
+        $derivacion = \DB::table('derivations')
+            ->leftJoin('triages', 'derivations.triage_id', '=', 'triages.id')
+            ->leftJoin('users', 'derivations.doctor_id', '=', 'users.id')
+            ->select('derivations.*', 'triages.patient_name', 'triages.age', 'triages.triage_level', 'triages.diagnostico', 'triages.cie10', 'triages.tratamiento', 'triages.symptoms', 'triages.vitals_ta', 'triages.vitals_fc', 'triages.vitals_temp', 'triages.vitals_spo2', 'users.name as doctor_name')
+            ->where('derivations.id', $id)
+            ->first();
+        $paciente = $derivacion ? (object)['patient_name' => $derivacion->patient_name, 'age' => $derivacion->age, 'triage_level' => $derivacion->triage_level, 'diagnostico' => $derivacion->diagnostico, 'cie10' => $derivacion->cie10, 'tratamiento' => $derivacion->tratamiento, 'symptoms' => $derivacion->symptoms, 'vitals_ta' => $derivacion->vitals_ta, 'vitals_fc' => $derivacion->vitals_fc, 'vitals_temp' => $derivacion->vitals_temp, 'vitals_spo2' => $derivacion->vitals_spo2, 'id' => $derivacion->triage_id] : null;
+        $doctor = $derivacion ? (object)['name' => $derivacion->doctor_name, 'id' => $derivacion->doctor_id] : null;
+        $pdf = \PDF::loadView('medico.pdf.derivacion', compact('derivacion', 'paciente', 'doctor'));
+        return $pdf->download('Pase_Salida_' . ($paciente->patient_name ?? 'Paciente') . '.pdf');
     }
 
     public function alertas()
     {
         $role = session('doctor_profile');
-        $alerts = MedicalAlert::with('triage')->orderBy('is_read')->orderBy('created_at', 'desc')->get();
+        $alerts = MedicalAlert::with('triage')->orderBy('is_read')
+            ->orderBy('created_at', 'desc')->paginate(25);
         return view('medico.alertas', compact('alerts', 'role'));
     }
 
-    public function markAlertRead($id) { MedicalAlert::find($id)?->update(['is_read' => 1]); return back()->with('success', 'Alerta leída'); }
-    public function eliminarAlerta($id) { MedicalAlert::findOrFail($id)->delete(); return back()->with('success', 'Alerta eliminada'); }
+    public function markAlertRead($id)
+    {
+        $alert = MedicalAlert::find($id);
+        if ($alert) $alert->update(['is_read' => 1]);
+        return back()->with('success', 'Alerta leída');
+    }
+
+    public function eliminarAlerta($id)
+    {
+        MedicalAlert::findOrFail($id)->delete();
+        return back()->with('success', 'Alerta eliminada');
+    }
 
     public function reportes()
     {
-        if (session('doctor_profile') === 'Médico C') return redirect()->route('medico.dashboard')->with('error', 'Sin acceso');
-        return view('medico.reportes', ['role' => session('doctor_profile')]);
+        $role = session('doctor_profile');
+        if ($role === 'Médico C') return redirect()->route('medico.dashboard')->with('error', 'Sin acceso');
+        $uid = Auth::id();
+        $pacientesAtendidos = Triage::where('assigned_doctor', $uid)->count();
+        $recetasEmitidas = \DB::table('prescriptions')->where('doctor_id', $uid)->count();
+        $estudiosSolicitados = \DB::table('medical_studies')->where('doctor_id', $uid)->count();
+        $altasDadas = Triage::where('discharge_doctor_id', $uid)->where('status', 'Alta')->count();
+        return view('medico.reportes', compact('role', 'pacientesAtendidos', 'recetasEmitidas', 'estudiosSolicitados', 'altasDadas'));
+    }
+
+    public function exportReportesPDF()
+    {
+        $pacientes = Triage::where('assigned_doctor', Auth::id())->get();
+        $pdf = \PDF::loadView('medico.pdf.reportes', compact('pacientes'));
+        return $pdf->download('Reporte_Medico_' . date('Y-m-d') . '.pdf');
     }
 }

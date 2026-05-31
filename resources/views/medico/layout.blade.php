@@ -39,7 +39,7 @@
 <body>
 <aside class="sb">
     <div class="sb-h">
-        <h2><i class="fas fa-stethoscope" style="color:{{$color}}"></i> HealthNexus</h2>
+        <img src="http://localhost/images/logo.png" alt="HealthNexus" style="height:30px; margin-right:8px;"><h2><i class="fas fa-stethoscope" style="color:{{$color}}"></i> HealthNexus</h2>
         <div class="bdg">{{$levelLabel}}</div>
         <div class="dn">{{$doctorName}}</div>
     </div>
@@ -101,10 +101,8 @@
         <a href="{{route('medico.defunciones')}}" class="ni @yield('nav-defunciones')"><i class="fas fa-cross"></i> Defunciones</a>
         <a href="{{route('medico.uci')}}" class="ni @yield('nav-uci')"><i class="fas fa-procedures"></i> UCI</a>
         <a href="{{route('medico.quirofano')}}" class="ni @yield('nav-quirofano')"><i class="fas fa-cut"></i> Quirófano</a>
-        <a href="{{route('medico.controlados')}}" class="ni @yield('nav-controlados')"><i class="fas fa-lock"></i> Controlados</a>
         <a href="{{route('medico.iaMedica')}}" class="ni @yield('nav-ia')"><i class="fas fa-brain"></i> IA Médica</a>
         <a href="{{route('medico.derivaciones')}}" class="ni @yield('nav-derivaciones')"><i class="fas fa-ambulance"></i> Derivaciones</a>
-        <a href="{{route('medico.auditoria')}}" class="ni @yield('nav-auditoria')"><i class="fas fa-shield-alt"></i> Auditoría</a>
         @endif
 
         <div class="ns">Sesión</div>

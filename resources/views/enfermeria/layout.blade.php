@@ -72,7 +72,7 @@
 <body>
     <div class="main">
         <div class="topbar">
-            <h1>@yield('title', 'Panel de Enfermería')</h1>
+            <img src="http://localhost/images/logo.png" alt="HealthNexus" style="height:30px; margin-right:8px;"><h1>@yield('title', 'Panel de Enfermería')</h1>
             <div style="display: flex; align-items: center; gap: 10px;">
                 <span style="font-weight: 600; font-size: 0.9rem;">{{ auth()->user()->name }}</span>
                 <span class="user-badge">{{ auth()->user()->role }}</span>
