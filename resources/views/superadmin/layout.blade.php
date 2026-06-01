@@ -40,19 +40,26 @@
             <a href="{{ route('superadmin.personal') }}" class="menu-item @yield('nav-personal')"><i class="fas fa-user-md"></i> Personal</a>
             <a href="{{ route('superadmin.scoreRiesgo') }}" class="menu-item @yield('nav-score')"><i class="fas fa-user-tag"></i> Score Riesgo</a>
             <a href="{{ route('superadmin.roles') }}" class="menu-item @yield('nav-roles')"><i class="fas fa-key"></i> Roles</a>
-            
+
             <div class="menu-category">Operacion Hospitalaria</div>
             <a href="{{ route('superadmin.pacientes') }}" class="menu-item @yield('nav-pacientes')"><i class="fas fa-procedures"></i> Pacientes</a>
             <a href="{{ route('superadmin.urgencias') }}" class="menu-item @yield('nav-urgencias')"><i class="fas fa-ambulance"></i> Urgencias</a>
             <a href="{{ route('superadmin.farmacia') }}" class="menu-item @yield('nav-farmacia')"><i class="fas fa-pills"></i> Farmacia</a>
             <a href="{{ route('superadmin.camas') }}" class="menu-item @yield('nav-recursos')"><i class="fas fa-bed"></i> Camas</a>
-            
+
+            <div class="menu-category">🚑 Ambulancia y Traslados</div>
+            <a href="{{ url('/superadmin/ambulancias') }}" class="menu-item @yield('nav-ambulancias')"><i class="fas fa-truck-medical"></i> Ambulancias</a>
+            <a href="{{ url('/superadmin/hospital-live') }}" class="menu-item @yield('nav-hospital-live')"><i class="fas fa-tower-broadcast"></i> Hospital Live</a>
+
+            <div class="menu-category">🧠 IA Medica</div>
+            <a href="{{ url('/superadmin/asistente-ia') }}" class="menu-item @yield('nav-asistente-ia')"><i class="fas fa-robot"></i> Asistente IA</a>
+
             <div class="menu-category">Finanzas y Seguridad</div>
             <a href="{{ route('superadmin.finanzas') }}" class="menu-item @yield('nav-finanzas')"><i class="fas fa-lock"></i> Finanzas (PIN)</a>
             <a href="{{ route('superadmin.auditoria') }}" class="menu-item @yield('nav-auditoria')"><i class="fas fa-scroll"></i> Auditoria</a>
             <a href="{{ route('superadmin.actividadSospechosa') }}" class="menu-item @yield('nav-sospechosa')"><i class="fas fa-skull-crossbones"></i> Sospechosos</a>
             <a href="{{ route('superadmin.monitorLive') }}" class="menu-item @yield('nav-monitor')"><i class="fas fa-broadcast-tower"></i> Monitor Live</a>
-            
+
             <div class="menu-category">Datos e IA</div>
             <a href="{{ route('superadmin.mapaCalor') }}" class="menu-item @yield('nav-mapa')"><i class="fas fa-fire-alt"></i> Mapa Calor</a>
             <a href="{{ route('superadmin.ingesta') }}" class="menu-item @yield('nav-ingesta')"><i class="fas fa-upload"></i> Ingesta</a>
@@ -69,7 +76,7 @@
 
     <div class="main">
         <div class="topbar">
-            <img src="http://localhost/images/logo.png" alt="HealthNexus" style="height:30px; margin-right:8px;"><h1>@yield('title', 'Panel de Control')</h1>
+            <h1>@yield('title', 'Panel de Control')</h1>
             <div style="display: flex; align-items: center; gap: 10px;">
                 <span style="font-weight: 600; font-size: 0.9rem;">{{ auth()->user()->name }}</span>
                 <span class="user-badge">{{ auth()->user()->role }}</span>

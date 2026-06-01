@@ -683,4 +683,76 @@ class DoctorController extends Controller
         return back()->with('success', "Paciente {$triage->patient_name} aceptado.");
     }
 
+
+    // ==========================================
+    // AMBULANCIAS Y TRASLADOS - MEDICO A/B
+    // ==========================================
+    public function ambulancias()
+    {
+        $role = session('doctor_profile', 'Médico C');
+        $isA = $role === 'Médico A';
+        $doctorId = auth()->id();
+
+        $ambulancias = \App\Models\Ambulance::orderBy('status')->orderBy('priority','desc')->get();
+        $disponibles = $ambulancias->where('status','Disponible')->count();
+        $activas = $ambulancias->where('status','En Ruta')->count();
+        $misTraslados = \App\Models\Triage::where('assigned_doctor_id', $doctorId)->where('status','En Traslado')->count();
+        $criticosPendientes = \App\Models\Triage::where('triage_level','Rojo')->whereIn('status',['En Espera','En Atencion'])->whereNull('assigned_doctor_id')->count();
+        $misPacientes = \App\Models\Triage::where('assigned_doctor_id', $doctorId)->whereIn('status',['En Atencion','Hospitalizado'])->limit(20)->get();
+        $misPacientesTraslado = \App\Models\Triage::where('assigned_doctor_id', $doctorId)->where('status','En Traslado')->get();
+
+        return view('medico.ambulancias', compact('role','isA','ambulancias','disponibles','activas','misTraslados','criticosPendientes','misPacientes','misPacientesTraslado'));
+    }
+
+    public function hospitalLive()
+    {
+        $role = session('doctor_profile', 'Médico C');
+        $doctorId = auth()->id();
+
+        $hospitalizados = \App\Models\Triage::where('status','Hospitalizado')->count();
+        $enAtencion = \App\Models\Triage::where('status','En Atencion')->count();
+        $enEspera = \App\Models\Triage::where('status','En Espera')->count();
+        $criticos = \App\Models\Triage::where('triage_level','Rojo')->count();
+        $ambActivas = \App\Models\Ambulance::where('status','En Ruta')->count();
+
+        $modoCrisis = false;
+        $areas = collect([
+            ['name'=>'Urgencias','pacientes'=>$enEspera,'capacidad'=>30,'color'=>'#DC2626'],
+            ['name'=>'Hospitalizacion','pacientes'=>$hospitalizados,'capacidad'=>50,'color'=>'#EA580C'],
+            ['name'=>'Consultas','pacientes'=>$enAtencion,'capacidad'=>20,'color'=>'#F97316'],
+            ['name'=>'UCI','pacientes'=>$criticos,'capacidad'=>10,'color'=>'#C7291C'],
+            ['name'=>'Ambulancias','pacientes'=>$ambActivas,'capacidad'=>8,'color'=>'#F05A4E'],
+        ])->map(function($a) use (&$modoCrisis) {
+            $a['pct'] = round(($a['pacientes']/max($a['capacidad'],1))*100);
+            $a['status'] = $a['pct']>90?'CRITICO':($a['pct']>70?'ALERTA':'NORMAL');
+            $a['status_color'] = $a['pct']>90?'#DC2626':($a['pct']>70?'#F59E0B':'#16A34A');
+            $a['border'] = $a['status_color'];
+            $a['bg'] = $a['pct']>90?'#FEF2F2':($a['pct']>70?'#FFFBEB':'#F0FDF4');
+            if ($a['pct']>90) $modoCrisis = true;
+            return $a;
+        });
+
+        if ($areas->where('status','CRITICO')->count()>=2) $modoCrisis = true;
+
+        $misCriticos = \App\Models\Triage::where('assigned_doctor_id',$doctorId)->where('triage_level','Rojo')->get();
+        $metricas = collect([
+            ['label'=>'En Espera','valor'=>$enEspera,'color'=>'#DC2626'],
+            ['label'=>'En Atencion','valor'=>$enAtencion,'color'=>'#EA580C'],
+            ['label'=>'Hospitalizados','valor'=>$hospitalizados,'color'=>'#F97316'],
+            ['label'=>'Criticos','valor'=>$criticos,'color'=>'#C7291C'],
+            ['label'=>'Ambulancias','valor'=>$ambActivas,'color'=>'#7C3AED'],
+        ]);
+
+        return view('medico.hospital-live', compact('role','modoCrisis','areas','misCriticos','metricas'));
+    }
+
+    public function asistenteIA()
+    {
+        $role = session('doctor_profile', 'Médico C');
+        $doctorName = session('doctor_name', 'Médico');
+        $doctorId = auth()->id();
+        $misPacientes = \App\Models\Triage::where('assigned_doctor_id',$doctorId)->whereIn('status',['En Atencion','Hospitalizado'])->limit(15)->get();
+
+        return view('medico.asistente-ia', compact('role','doctorName','misPacientes'));
+    }
 }

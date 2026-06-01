@@ -35,6 +35,12 @@
         </div>
     </div>
 
+    <!-- MAPA MAPBOX -->
+    <div style="background:white;border-radius:16px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.05);margin-bottom:1.5rem;border-top:4px solid #EA580C">
+        <h3 style="font-weight:900;color:#9A3412;margin-bottom:1rem"><i class="fas fa-map-marked-alt" style="color:#EA580C"></i> Mapa en Tiempo Real</h3>
+        <div id="mapa-ambulancias" style="width:100%;height:400px;border-radius:12px;overflow:hidden;border:2px solid #FDBA74"></div>
+    </div>
+
     <!-- DESPACHAR AMBULANCIA -->
     <div style="background:white;border-radius:16px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.05);margin-bottom:1.5rem;border-top:4px solid #EA580C">
         <h3 style="font-weight:900;color:#9A3412;margin-bottom:1rem"><i class="fas fa-paper-plane" style="color:#EA580C"></i> Despachar Ambulancia</h3>
@@ -69,11 +75,11 @@
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem">
                 <div>
-                    <label style="font-weight:800;color:#9A3412;font-size:0.8rem;display:block;margin-bottom:0.3rem">Paciente (opcional)</label>
+                    <label style="font-weight:800;color:#9A3412;font-size:0.8rem;display:block;margin-bottom:0.3rem">Paciente</label>
                     <select name="patient_id" style="width:100%;padding:0.5rem;border:2px solid #FDBA74;border-radius:8px;font-size:0.85rem">
-                        <option value="">Sin paciente asignado</option>
+                        <option value="">Sin paciente</option>
                         @foreach($pacientesCriticos as $p)
-                        <option value="{{ $p->id }}">{{ $p->patient_name }} - {{ $p->triage_level }}</option>
+                        <option value="{{ $p->id }}">{{ $p->patient_name }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -88,34 +94,32 @@
                 </div>
                 <div>
                     <label style="font-weight:800;color:#9A3412;font-size:0.8rem;display:block;margin-bottom:0.3rem">Notas</label>
-                    <input type="text" name="notes" placeholder="Notas del traslado" style="width:100%;padding:0.5rem;border:2px solid #FDBA74;border-radius:8px;font-size:0.85rem">
+                    <input type="text" name="notes" placeholder="Notas" style="width:100%;padding:0.5rem;border:2px solid #FDBA74;border-radius:8px;font-size:0.85rem">
                 </div>
             </div>
             <button type="submit" style="padding:0.5rem 1.5rem;background:#EA580C;color:white;border:none;border-radius:8px;font-weight:800;cursor:pointer"><i class="fas fa-paper-plane"></i> Despachar</button>
         </form>
     </div>
 
-    <!-- AMBULANCIAS ACTIVAS - CON IoT SIMULADO -->
+    <!-- AMBULANCIAS ACTIVAS CON IoT -->
     <div style="background:white;border-radius:16px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.05);margin-bottom:1.5rem;border-top:4px solid #DC2626">
         <h3 style="font-weight:900;color:#DC2626;margin-bottom:1rem"><i class="fas fa-satellite-dish" style="color:#DC2626"></i> Ambulancias Activas - Monitoreo IoT</h3>
         @php $activasList = $ambulancias->where('status', 'En Ruta'); @endphp
         @if($activasList->count() > 0)
         <div style="display:grid;gap:1rem">
             @foreach($activasList as $a)
-            <div id="amb-{{ $a->id }}" style="background:linear-gradient(135deg,#FFF7ED,#FFEDD5);border-radius:16px;padding:1.5rem;border:2px solid #FDBA74">
+            <div style="background:linear-gradient(135deg,#FFF7ED,#FFEDD5);border-radius:16px;padding:1.5rem;border:2px solid #FDBA74">
                 <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:1rem">
                     <div>
                         <div style="font-weight:900;color:#9A3412;font-size:1.1rem"><i class="fas fa-truck-medical" style="color:#EA580C"></i> {{ $a->code }}</div>
                         <div style="color:#A8A29E;font-size:0.8rem">{{ $a->type }}</div>
                     </div>
-                    <div style="display:flex;gap:0.5rem;align-items:center">
-                        <span style="background:{{ $a->priority == 'Critica' ? '#FEE2E2' : ($a->priority == 'Urgente' ? '#FFEDD5' : '#FEF9C3') }};color:{{ $a->priority == 'Critica' ? '#DC2626' : ($a->priority == 'Urgente' ? '#EA580C' : '#CA8A04') }};padding:0.3rem 0.8rem;border-radius:20px;font-weight:800;font-size:0.75rem">
-                            {{ $a->priority }}
-                        </span>
+                    <div style="display:flex;gap:0.5rem">
+                        @php $pColor = $a->priority == 'Critica' ? '#DC2626' : ($a->priority == 'Urgente' ? '#EA580C' : '#D97706'); @endphp
+                        <span style="background:{{ $pColor }}20;color:{{ $pColor }};padding:0.3rem 0.8rem;border-radius:20px;font-weight:800;font-size:0.75rem">{{ $a->priority }}</span>
                         <span style="background:#FFEDD5;color:#EA580C;padding:0.3rem 0.6rem;border-radius:20px;font-weight:800;font-size:0.7rem"><i class="fas fa-signal"></i> LIVE</span>
                     </div>
                 </div>
-
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-bottom:1rem">
                     <div style="background:white;border-radius:8px;padding:0.6rem">
                         <div style="font-size:0.7rem;color:#A8A29E;font-weight:700">Origen</div>
@@ -126,7 +130,6 @@
                         <div style="font-weight:800;color:#9A3412;font-size:0.85rem">{{ $a->destination }}</div>
                     </div>
                 </div>
-
                 <!-- IoT PANEL -->
                 <div style="background:#431407;border-radius:12px;padding:1rem;margin-bottom:1rem">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.8rem">
@@ -161,26 +164,8 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- MAPA SIMULADO -->
-                <div style="background:#7F1D1D;border-radius:12px;padding:1rem;margin-bottom:1rem;position:relative;height:120px;overflow:hidden">
-                    <div style="color:#FDBA74;font-size:0.7rem;font-weight:700;margin-bottom:0.5rem"><i class="fas fa-map-marker-alt" style="color:#FBBF24"></i> RASTREO GPS</div>
-                    <div style="position:relative;height:80px">
-                        <div style="position:absolute;top:10px;left:10%;color:#4ADE80;font-size:0.6rem"><i class="fas fa-hospital"></i> {{ $a->origin }}</div>
-                        <div style="position:absolute;top:10px;right:10%;color:#FDBA74;font-size:0.6rem"><i class="fas fa-hospital"></i> {{ $a->destination }}</div>
-                        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)">
-                            <div id="truck-{{ $a->id }}" style="font-size:1.5rem;color:#FBBF24;animation:pulse 2s infinite"><i class="fas fa-truck-medical"></i></div>
-                        </div>
-                        <svg style="position:absolute;top:40%;left:15%;width:70%;height:2px">
-                            <line x1="0" y1="1" x2="100%" y2="1" stroke="#FDBA74" stroke-width="2" stroke-dasharray="8,4"/>
-                        </svg>
-                    </div>
-                </div>
-
                 <div style="display:flex;justify-content:space-between;align-items:center">
-                    <div style="font-size:0.75rem;color:#A8A29E">
-                        Despachada: {{ $a->dispatched_at ? $a->dispatched_at->diffForHumans() : 'N/A' }}
-                    </div>
+                    <div style="font-size:0.75rem;color:#A8A29E">Despachada: {{ $a->dispatched_at ? $a->dispatched_at->diffForHumans() : 'N/A' }}</div>
                     <form method="POST" action="{{ url('/medico/ambulancias/' . $a->id . '/llegada') }}">
                         @csrf
                         <button type="submit" style="padding:0.4rem 1rem;background:#16A34A;color:white;border:none;border-radius:8px;font-weight:800;font-size:0.8rem;cursor:pointer"><i class="fas fa-flag-checkered"></i> Registrar Llegada</button>
@@ -196,7 +181,7 @@
 
     <!-- AMBULANCIAS DISPONIBLES -->
     <div style="background:white;border-radius:16px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.05);margin-bottom:1.5rem;border-top:4px solid #EA580C">
-        <h3 style="font-weight:900;color:#EA580C;margin-bottom:1rem"><i class="fas fa-check-circle" style="color:#EA580C"></i> Ambulancias Disponibles</h3>
+        <h3 style="font-weight:900;color:#EA580C;margin-bottom:1rem"><i class="fas fa-check-circle"></i> Disponibles</h3>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem">
             @foreach($ambulancias->where('status','Disponible') as $a)
             <div style="border:2px solid #FDBA74;border-radius:12px;padding:1rem;text-align:center;background:#FFF7ED">
@@ -209,18 +194,17 @@
         </div>
     </div>
 
-    <!-- PACIENTES CRITICOS PARA TRASLADO -->
+    <!-- PACIENTES CRITICOS -->
     <div style="background:white;border-radius:16px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.05);border-top:4px solid #DC2626">
-        <h3 style="font-weight:900;color:#DC2626;margin-bottom:1rem"><i class="fas fa-heart-pulse" style="color:#DC2626"></i> Pacientes Criticos - Posible Traslado</h3>
+        <h3 style="font-weight:900;color:#DC2626;margin-bottom:1rem"><i class="fas fa-heart-pulse"></i> Pacientes Criticos</h3>
         @if($pacientesCriticos->count() > 0)
         <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
-            <thead><tr style="background:#FEF2F2"><th style="padding:0.6rem;text-align:left;color:#991B1B">Paciente</th><th style="padding:0.6rem;color:#991B1B">Triage</th><th style="padding:0.6rem;color:#991B1B">Estado</th><th style="padding:0.6rem;color:#991B1B">Sintomas</th><th style="padding:0.6rem;color:#991B1B">Tiempo</th></tr></thead>
+            <thead><tr style="background:#FEF2F2"><th style="padding:0.6rem;text-align:left;color:#991B1B">Paciente</th><th style="padding:0.6rem;color:#991B1B">Triage</th><th style="padding:0.6rem;color:#991B1B">Sintomas</th><th style="padding:0.6rem;color:#991B1B">Tiempo</th></tr></thead>
             <tbody>
             @foreach($pacientesCriticos as $p)
             <tr style="border-bottom:1px solid #FEE2E2">
                 <td style="padding:0.5rem;font-weight:700;color:#7F1D1D">{{ $p->patient_name }}</td>
                 <td style="padding:0.5rem"><span style="background:#FEE2E2;color:#DC2626;padding:0.15rem 0.5rem;border-radius:4px;font-size:0.75rem;font-weight:800">{{ $p->triage_level }}</span></td>
-                <td style="padding:0.5rem;color:#991B1B;font-size:0.8rem">{{ $p->status }}</td>
                 <td style="padding:0.5rem;color:#A8A29E">{{ Str::limit($p->symptoms, 40) }}</td>
                 <td style="padding:0.5rem;font-size:0.75rem;color:#DC2626;font-weight:700">{{ $p->created_at->diffForHumans() }}</td>
             </tr>
@@ -228,32 +212,120 @@
             </tbody>
         </table>
         @else
-        <p style="text-align:center;color:#16A34A;padding:1.5rem;font-weight:700"><i class="fas fa-shield-heart"></i> Sin pacientes criticos pendientes</p>
+        <p style="text-align:center;color:#16A34A;padding:1.5rem;font-weight:700"><i class="fas fa-shield-heart"></i> Sin pacientes criticos</p>
         @endif
     </div>
 </div>
 
 <style>
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-@keyframes pulse { 0%,100%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-50%,-50%) scale(1.15)} }
 </style>
 
 <script>
+// ============================================================
+// MAPBOX MAPA REAL
+// ============================================================
+const MAPBOX_TOKEN = '{{ env("MAPBOX_PUBLIC_TOKEN") }}';
+
+if (MAPBOX_TOKEN && MAPBOX_TOKEN !== 'pk.tu-mapbox-token-aqui' && MAPBOX_TOKEN.length > 20) {
+    // Cargar Mapbox GL JS
+    const link = document.createElement('link');
+    link.href = 'https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+
+    const script = document.createElement('script');
+    script.src = 'https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js';
+    script.onload = function() {
+        mapboxgl.accessToken = MAPBOX_TOKEN;
+        const map = new mapboxgl.Map({
+            container: 'mapa-ambulancias',
+            style: 'mapbox://styles/mapbox/dark-v11',
+            center: [-99.1332, 19.4326],
+            zoom: 12
+        });
+
+        map.addControl(new mapboxgl.NavigationControl());
+
+        // Agregar marcadores de ambulancias activas
+        @foreach($ambulancias as $a)
+        @if($a->status == 'En Ruta' && $a->latitude && $a->longitude)
+        new mapboxgl.Marker({ color: '{{ $a->priority == "Critica" ? "#DC2626" : "#EA580C" }}' })
+            .setLngLat([{{ $a->longitude }}, {{ $a->latitude }}])
+            .setPopup(new mapboxgl.Popup().setHTML(
+                '<div style="padding:8px;font-family:system-ui">' +
+                '<strong style="color:#EA580C">{{ $a->code }}</strong><br>' +
+                '<span style="font-size:12px">{{ $a->type }}</span><br>' +
+                '<span style="font-size:11px;color:#666">{{ $a->origin }} → {{ $a->destination }}</span><br>' +
+                '<span style="font-size:11px;color:{{ $a->priority == "Critica" ? "#DC2626" : "#EA580C" }}">{{ $a->priority }}</span>' +
+                '</div>'
+            ))
+            .addTo(map);
+        @elseif($a->status == 'Disponible' && $a->latitude && $a->longitude)
+        new mapboxgl.Marker({ color: '#16A34A' })
+            .setLngLat([{{ $a->longitude }}, {{ $a->latitude }}])
+            .setPopup(new mapboxgl.Popup().setHTML(
+                '<div style="padding:8px;font-family:system-ui">' +
+                '<strong style="color:#16A34A">{{ $a->code }}</strong><br>' +
+                '<span style="font-size:12px">{{ $a->type }} - Disponible</span>' +
+                '</div>'
+            ))
+            .addTo(map);
+        @endif
+        @endforeach
+
+        // Hospital marker central
+        new mapboxgl.Marker({ color: '#F59E0B' })
+            .setLngLat([-99.1332, 19.4326])
+            .setPopup(new mapboxgl.Popup().setHTML(
+                '<div style="padding:8px;font-family:system-ui">' +
+                '<strong style="color:#F59E0B">🏥 Hospital Central</strong><br>' +
+                '<span style="font-size:12px">HealthNexus</span>' +
+                '</div>'
+            ))
+            .addTo(map);
+    };
+    document.head.appendChild(script);
+} else {
+    // Mapa simulado si no hay token
+    document.getElementById('mapa-ambulancias').innerHTML = `
+        <div style="background:linear-gradient(135deg,#1C1917,#431407);width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:white;border-radius:12px;position:relative;overflow:hidden">
+            <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:url('data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"100\" height=\"100\"><circle cx=\"50\" cy=\"50\" r=\"1\" fill=\"%23FDBA7440\"/></svg>');opacity:0.3"></div>
+            <i class="fas fa-map-marked-alt" style="font-size:3rem;color:#FDBA74;margin-bottom:1rem"></i>
+            <div style="font-weight:900;font-size:1.2rem;color:#FDBA74;margin-bottom:0.5rem">Mapa de Ambulancias</div>
+            <div style="font-size:0.85rem;color:#A8A29E;text-align:center;max-width:400px">
+                Para ver el mapa interactivo real, configura tu token de Mapbox:<br>
+                <code style="background:#431407;padding:0.2rem 0.5rem;border-radius:4px;color:#FDBA74;font-size:0.75rem">MAPBOX_PUBLIC_TOKEN=pk.eyJ1...</code><br>
+                <a href="https://mapbox.com/" target="_blank" style="color:#EA580C;font-weight:700;font-size:0.8rem">Obtener token gratis →</a>
+            </div>
+            <div style="margin-top:1.5rem;display:flex;gap:1rem">
+                @foreach($ambulancias->where('status','En Ruta') as $a)
+                <div style="background:#431407;border-radius:8px;padding:0.5rem 0.8rem;border:1px solid #FDBA74">
+                    <span style="color:#DC2626;font-weight:800;font-size:0.8rem">🚑 {{ $a->code }}</span>
+                    <span style="color:#FDBA74;font-size:0.7rem;margin-left:0.5rem">{{ $a->origin }} → {{ $a->destination }}</span>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    `;
+}
+
+// ============================================================
+// IoT SIMULADO - Actualizar cada 5 segundos
+// ============================================================
 setInterval(function() {
     @foreach($activasList as $a)
     fetch('/medico/ambulancias/{{ $a->id }}/iot')
         .then(r => r.json())
         .then(data => {
-            document.getElementById('speed-{{ $a->id }}').textContent = data.speed;
-            document.getElementById('fuel-{{ $a->id }}').textContent = data.fuel;
-            document.getElementById('hr-{{ $a->id }}').textContent = data.heart_rate;
-            document.getElementById('hr-{{ $a->id }}').style.color = data.heart_rate > 100 ? '#F87171' : '#4ADE80';
-            document.getElementById('o2-{{ $a->id }}').textContent = data.oxygen;
-            document.getElementById('o2-{{ $a->id }}').style.color = data.oxygen < 90 ? '#F87171' : '#4ADE80';
-            document.getElementById('temp-{{ $a->id }}').textContent = data.temperature;
-            document.getElementById('temp-{{ $a->id }}').style.color = data.temperature > 38 ? '#F87171' : '#4ADE80';
+            const el = (id) => document.getElementById(id);
+            if(el('speed-{{ $a->id }}')) el('speed-{{ $a->id }}').textContent = data.speed;
+            if(el('fuel-{{ $a->id }}')) el('fuel-{{ $a->id }}').textContent = data.fuel;
+            if(el('hr-{{ $a->id }}')) { el('hr-{{ $a->id }}').textContent = data.heart_rate; el('hr-{{ $a->id }}').style.color = data.heart_rate > 100 ? '#F87171' : '#4ADE80'; }
+            if(el('o2-{{ $a->id }}')) { el('o2-{{ $a->id }}').textContent = data.oxygen; el('o2-{{ $a->id }}').style.color = data.oxygen < 90 ? '#F87171' : '#4ADE80'; }
+            if(el('temp-{{ $a->id }}')) { el('temp-{{ $a->id }}').textContent = data.temperature; el('temp-{{ $a->id }}').style.color = data.temperature > 38 ? '#F87171' : '#4ADE80'; }
         })
-        .catch(e => console.log('IoT error {{ $a->id }}'));
+        .catch(() => {});
     @endforeach
 }, 5000);
 </script>

@@ -8,18 +8,24 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckRole
 {
-    public function handle(Request $request, Closure $next, string ...$roles): Response
+    public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        // Si no está logueado, redirigir al login
         if (!auth()->check()) {
-            return redirect()->route('login');
+            return redirect('/login');
         }
 
-        // Si su rol no está en la lista de roles permitidos, acceso denegado
-        if (!in_array(auth()->user()->role, $roles)) {
-            abort(403, 'ACCESO DENEGADO. No tienes los permisos necesarios para ingresar a este módulo del hospital.');
+        $userRole = auth()->user()->role;
+
+        // Super Admin tiene acceso a TODO
+        if ($userRole === 'Super Admin') {
+            return $next($request);
         }
 
-        return $next($request);
+        // Verificar si el rol del usuario esta en los roles permitidos
+        if (in_array($userRole, $roles)) {
+            return $next($request);
+        }
+
+        abort(403, 'No tienes permiso para acceder a esta pagina.');
     }
 }

@@ -16,18 +16,19 @@ Route::get('/', function () { return redirect()->route('login'); });
 // ==========================================
 Route::middleware(['auth', 'verified', 'role:Médico A,Médico B,Médico C,Especialista'])->prefix('medico')->name('medico.')->group(function () {
     Route::get('/especialista', [SpecialistController::class, 'dashboard'])->name('especialista.dashboard');
-    Route::get('/especialista/pacientes', [SpecialistController::class, 'misPacientes']);
-    Route::get('/especialista/hospitalizados', [SpecialistController::class, 'hospitalizados']);
-    Route::get('/especialista/derivaciones', [SpecialistController::class, 'derivaciones']);
-    Route::get('/especialista/reportes', [SpecialistController::class, 'reportes']);
-    Route::get('/especialista/ia-medica', [SpecialistController::class, 'iaMedica']);
-    Route::get('/especialista/medicamentos', [SpecialistController::class, 'medicamentos']);
-    Route::post('/especialista/derivaciones/crear', [SpecialistController::class, 'crearDerivacion']);
-    Route::post('/especialista/derivaciones/{id}/aceptar', [SpecialistController::class, 'aceptarDerivacion']);
-    Route::post('/especialista/derivaciones/{id}/rechazar', [SpecialistController::class, 'rechazarDerivacion']);
-    Route::post('/especialista/derivaciones/{id}/reagendar', [SpecialistController::class, 'reagendarDerivacion']);
-    Route::post('/especialista/aceptar/{id}', [SpecialistController::class, 'aceptarPaciente']);
-    Route::post('/especialista/derivar/{id}', [SpecialistController::class, 'derivarPaciente']);
+    Route::get('/agenda', [SpecialistController::class, 'agenda'])->name('especialista.agenda');
+    Route::get('/especialista/pacientes', [SpecialistController::class, 'misPacientes'])->name('especialista.pacientes');
+    Route::get('/especialista/hospitalizados', [SpecialistController::class, 'hospitalizados'])->name('especialista.hospitalizados');
+    Route::get('/especialista/derivaciones', [SpecialistController::class, 'derivaciones'])->name('especialista.derivaciones');
+    Route::get('/especialista/reportes', [SpecialistController::class, 'reportes'])->name('especialista.reportes');
+    Route::get('/especialista/ia-medica', [SpecialistController::class, 'iaMedica'])->name('especialista.iaMedica');
+    Route::get('/especialista/medicamentos', [SpecialistController::class, 'medicamentos'])->name('especialista.medicamentos');
+    Route::post('/especialista/derivaciones/crear', [SpecialistController::class, 'crearDerivacion'])->name('especialista.derivaciones.crear');
+    Route::post('/especialista/derivaciones/{id}/aceptar', [SpecialistController::class, 'aceptarDerivacion'])->name('especialista.derivaciones.aceptar');
+    Route::post('/especialista/derivaciones/{id}/rechazar', [SpecialistController::class, 'rechazarDerivacion'])->name('especialista.derivaciones.rechazar');
+    Route::post('/especialista/derivaciones/{id}/reagendar', [SpecialistController::class, 'reagendarDerivacion'])->name('especialista.derivaciones.reagendar');
+    Route::post('/especialista/aceptar/{id}', [SpecialistController::class, 'aceptarPaciente'])->name('especialista.aceptar');
+    Route::post('/especialista/derivar/{id}', [SpecialistController::class, 'derivarPaciente'])->name('especialista.derivar');
     Route::get('/especialidades', [SpecialtyController::class, 'index'])->name('especialidades');
     Route::get('/especialidades/{id}', [SpecialtyController::class, 'show'])->name('especialidades.show');
     Route::post('/especialidades/derivar/{patientId}', [SpecialtyController::class, 'derivar'])->name('especialidades.derivar');
@@ -82,7 +83,7 @@ Route::middleware(['auth', 'verified', 'role:Médico A,Médico B,Médico C,Espec
     Route::post('/tratamientos', [DoctorController::class, 'storeTratamiento'])->name('storeTratamiento');
 
     // EVOLUCIÓN
-    Route::get('/api/pacientes-camas', [AppHttpControllersApiPatientController::class, 'pacientesParaCamas']);
+    Route::get('/api/pacientes-camas', [\App\Http\Controllers\Api\PatientController::class, 'pacientesParaCamas']);
     Route::get('/mapa-camas', [NurseController::class, 'mapaCamas'])->name('mapaCamas');
     Route::post('/camas/{id}/asignar', [NurseController::class, 'asignarCama'])->name('asignarCama');
     Route::post('/camas/{id}/liberar', [NurseController::class, 'liberarCama'])->name('liberarCama');
@@ -124,18 +125,19 @@ Route::middleware(['auth', 'verified', 'role:Médico A,Médico B,Médico C,Espec
     Route::get('/quirofano', [DoctorController::class, 'quirofano'])->name('quirofano');
     Route::get('/controlados', [DoctorController::class, 'controlados'])->name('controlados');
     Route::get('/ia-medica', [DoctorController::class, 'iaMedica'])->name('iaMedica');
-    Route::get('/hospitalizados', [SpecialistController::class, 'hospitalizados']);
-    Route::get('/derivaciones', [SpecialistController::class, 'derivaciones']);
-    Route::get('/ambulancias', [\App\Http\Controllers\AmbulanceController::class, 'index']);
-    Route::post('/ambulancias/despachar', [\App\Http\Controllers\AmbulanceController::class, 'despachar']);
-    Route::post('/ambulancias/{id}/llegada', [\App\Http\Controllers\AmbulanceController::class, 'llegada']);
-    Route::get('/ambulancias/{id}/iot', [\App\Http\Controllers\AmbulanceController::class, 'actualizarIot']);
-    Route::get('/hospital-live', [\App\Http\Controllers\AmbulanceController::class, 'hospitalLive']);
-    Route::get('/pacientes', [SpecialistController::class, 'misPacientes'])->name('especialista.pacientes');
+    Route::get('/ambulancias-medico', [DoctorController::class, 'ambulancias'])->name('ambulancias');
+    Route::get('/hospital-live-medico', [DoctorController::class, 'hospitalLive'])->name('hospitalLive');
+    Route::get('/asistente-ia-medico', [DoctorController::class, 'asistenteIA'])->name('asistenteIA');
+    Route::get('/hospitalizados', [SpecialistController::class, 'hospitalizados'])->name('hospitalizados');
+    Route::get('/derivaciones', [SpecialistController::class, 'derivaciones'])->name('derivaciones');
+    Route::get('/asistente-ia', [\App\Http\Controllers\AIController::class, 'asistente'])->name('asistente-ia');
+    Route::post('/ia/consultar', [\App\Http\Controllers\AIController::class, 'consultar'])->name('ia.consultar');
+    Route::get('/ambulancias', [\App\Http\Controllers\AmbulanceController::class, 'index'])->name('ambulancias');
+    Route::get('/hospital-live', [\App\Http\Controllers\AmbulanceController::class, 'hospitalLive'])->name('hospital-live');
+    Route::get('/pacientes', [DoctorController::class, 'pacientes'])->name('pacientes');
     Route::post('/derivaciones/crear', [SpecialistController::class, 'crearDerivacion'])->name('especialista.derivaciones.crear');
     Route::post('/derivaciones/{id}/aceptar', [SpecialistController::class, 'aceptarDerivacion'])->name('especialista.derivaciones.aceptar');
     Route::post('/derivaciones/{id}/rechazar', [SpecialistController::class, 'rechazarDerivacion'])->name('especialista.derivaciones.rechazar');
-    Route::post('/derivaciones/{id}/reagendar', [SpecialistController::class, 'reagendarDerivacion'])->name('especialista.derivaciones.reagendar');
     Route::get('/derivaciones/{id}/pdf', [DoctorController::class, 'exportDerivacionPDF'])->name('derivacion.pdf');    Route::get('/auditoria/export/pdf', [SuperAdminController::class, 'exportAuditPDF'])->name('auditoria.export.pdf');
     Route::get('/auditoria/export/csv', [SuperAdminController::class, 'exportAuditCSV'])->name('auditoria.export.csv');
     Route::get('/auditoria/export/json', [SuperAdminController::class, 'exportAuditJSON'])->name('auditoria.export.json');
@@ -232,6 +234,34 @@ Route::middleware(['auth', 'verified', 'role:SuperAdmin,Administrador Hospitalar
     Route::get('/personal', [SuperAdminController::class, 'personal'])->name('personal');
     Route::post('/personal', [SuperAdminController::class, 'storeUser'])->name('storeUser');
     Route::post('/personal/{user}/approve', [SuperAdminController::class, 'approveUser'])->name('approveUser');
+    // Ambulancias, Hospital Live, IA
+    Route::get('/ambulancias', function() {
+        $ambulancias = \App\Models\Ambulance::orderBy('status')->get();
+        $disponibles = $ambulancias->where('status','Disponible')->count();
+        $activas = $ambulancias->where('status','En Ruta')->count();
+        $criticas = $ambulancias->where('priority','Critica')->count();
+        $total = $ambulancias->count();
+        $costoOperativo = $activas * 2500;
+        return view('superadmin.ambulancias', compact('ambulancias','disponibles','activas','criticas','total','costoOperativo'));
+    });
+    Route::get('/hospital-live', function() {
+        $hospitalizados = \App\Models\Triage::where('status','Hospitalizado')->count();
+        $enAtencion = \App\Models\Triage::where('status','En Atencion')->count();
+        $enEspera = \App\Models\Triage::where('status','En Espera')->count();
+        $criticos = \App\Models\Triage::where('triage_level','Rojo')->count();
+        $ambulancias = \App\Models\Ambulance::where('status','En Ruta')->count();
+        $modoCrisis = false;
+        $areas = collect([['name'=>'Urgencias','pacientes'=>$enEspera,'capacidad'=>30,'color'=>'#DC2626'],['name'=>'Hospitalizacion','pacientes'=>$hospitalizados,'capacidad'=>50,'color'=>'#EA580C'],['name'=>'Consultas','pacientes'=>$enAtencion,'capacidad'=>20,'color'=>'#F97316'],['name'=>'UCI','pacientes'=>$criticos,'capacidad'=>10,'color'=>'#C7291C'],['name'=>'Ambulancias','pacientes'=>$ambulancias,'capacidad'=>8,'color'=>'#F05A4E']])->map(function($a) use (&$modoCrisis) { $a['pct']=round(($a['pacientes']/max($a['capacidad'],1))*100); $a['status']=$a['pct']>90?'CRITICO':($a['pct']>70?'ALERTA':'NORMAL'); $a['status_color']=$a['pct']>90?'#DC2626':($a['pct']>70?'#F59E0B':'#16A34A'); $a['border']=$a['status_color']; $a['bg']=$a['pct']>90?'#FEF2F2':($a['pct']>70?'#FFFBEB':'#F0FDF4'); if($a['pct']>90) $modoCrisis=true; return $a; });
+        if($areas->where('status','CRITICO')->count()>=2) $modoCrisis=true;
+        $eventos = \App\Models\AuditLog::orderBy('created_at','desc')->take(12)->get();
+        $metricas = collect([['label'=>'En Espera','valor'=>$enEspera,'color'=>'#DC2626'],['label'=>'En Atencion','valor'=>$enAtencion,'color'=>'#EA580C'],['label'=>'Hospitalizados','valor'=>$hospitalizados,'color'=>'#F97316'],['label'=>'Criticos','valor'=>$criticos,'color'=>'#C7291C'],['label'=>'Ambulancias','valor'=>$ambulancias,'color'=>'#7C3AED'],['label'=>'Camas Libres','valor'=>\App\Models\Bed::where('status','Disponible')->count(),'color'=>'#16A34A']]);
+        return view('superadmin.hospital-live', compact('modoCrisis','areas','eventos','metricas'));
+    });
+    Route::get('/asistente-ia', function() { return view('superadmin.asistente-ia'); });
+    // Ambulancias y Traslados
+    // IA Medica
+    Route::post('/ia/consultar', [\App\Http\Controllers\AIController::class, 'consultar'])->name('ia.consultar');
+    // Derivaciones
     Route::put('/personal/{user}/reject', [SuperAdminController::class, 'rejectUser'])->name('rejectUser');
     Route::put('/personal/{user}/role', [SuperAdminController::class, 'updateRole'])->name('updateRole');
     Route::put('/personal/{user}/status', [SuperAdminController::class, 'toggleStatus'])->name('toggleStatus');
@@ -294,3 +324,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// ==================================================

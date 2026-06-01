@@ -39,7 +39,7 @@
 <body>
 <aside class="sb">
     <div class="sb-h">
-        <img src="http://localhost/images/logo.png" alt="HealthNexus" style="height:30px; margin-right:8px;"><h2><i class="fas fa-stethoscope" style="color:{{$color}}"></i> HealthNexus</h2>
+        <h2><i class="fas fa-stethoscope" style="color:{{$color}}"></i> HealthNexus</h2>
         <div class="bdg">{{$levelLabel}}</div>
         <div class="dn">{{$doctorName}}</div>
     </div>
@@ -90,6 +90,7 @@
         <div class="ns">Hospitalización</div>
         <a href="{{route('medico.hospitalizacion')}}" class="ni @yield('nav-hospitalización')"><i class="fas fa-bed"></i> Hospitalización</a>
         <a href="{{route('medico.camas')}}" class="ni @yield('nav-camas')"><i class="fas fa-th"></i> Mapa de Camas</a>
+        <a href="{{route('medico.hospitalizados')}}" class="ni @yield('nav-hospitalizados')"><i class="fas fa-procedures"></i> Hospitalizados</a>
         <div class="ns">Sistema</div>
         <a href="{{route('medico.servicios')}}" class="ni @yield('nav-servicios')"><i class="fas fa-concierge-bell"></i> Servicios</a>
         <a href="{{route('medico.farmaciaStock')}}" class="ni @yield('nav-farmaciaStock')"><i class="fas fa-capsules"></i> Farmacia</a>
@@ -103,6 +104,22 @@
         <a href="{{route('medico.quirofano')}}" class="ni @yield('nav-quirofano')"><i class="fas fa-cut"></i> Quirófano</a>
         <a href="{{route('medico.iaMedica')}}" class="ni @yield('nav-ia')"><i class="fas fa-brain"></i> IA Médica</a>
         <a href="{{route('medico.derivaciones')}}" class="ni @yield('nav-derivaciones')"><i class="fas fa-ambulance"></i> Derivaciones</a>
+        @endif
+
+        @if($isA)
+        <div class="ns" style="color:#EA580C">🚑 Ambulancia / Traslados</div>
+        <a href="{{url('/medico/ambulancias-medico')}}" class="ni @yield('nav-ambulancias')"><i class="fas fa-truck-medical"></i> Ambulancias</a>
+        <a href="{{url('/medico/hospital-live-medico')}}" class="ni @yield('nav-hospital-live')"><i class="fas fa-tower-broadcast"></i> Hospital Live</a>
+        <div class="ns" style="color:#EA580C">🧠 IA Avanzada</div>
+        <a href="{{url('/medico/asistente-ia-medico')}}" class="ni @yield('nav-asistente-ia')"><i class="fas fa-robot"></i> Asistente IA</a>
+        @endif
+
+        @if($isB)
+        <div class="ns" style="color:#EA580C">🚑 Ambulancia</div>
+        <a href="{{url('/medico/ambulancias-medico')}}" class="ni @yield('nav-ambulancias')"><i class="fas fa-truck-medical"></i> Ambulancias</a>
+        <a href="{{url('/medico/hospital-live-medico')}}" class="ni @yield('nav-hospital-live')"><i class="fas fa-tower-broadcast"></i> Hospital Live</a>
+        <div class="ns" style="color:#EA580C">🧠 IA</div>
+        <a href="{{url('/medico/asistente-ia-medico')}}" class="ni @yield('nav-asistente-ia')"><i class="fas fa-robot"></i> Asistente IA</a>
         @endif
 
         <div class="ns">Sesión</div>
