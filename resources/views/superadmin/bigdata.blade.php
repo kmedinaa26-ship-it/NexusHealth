@@ -1,4 +1,5 @@
-@extends('superadmin.layout')
+@php $isAdmin = auth()->user()->role === 'SuperAdmin' || auth()->user()->role === 'Administrador'; @endphp
+@extends($isAdmin ? 'superadmin.layout' : 'enfermeria.layout')
 @section('content')
 <div class="py-12">
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-8">

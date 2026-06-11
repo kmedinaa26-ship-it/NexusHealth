@@ -28,9 +28,13 @@ class NurseController extends Controller
 
     public function triage()
     {
-        $patients = Triage::orderBy('created_at', 'desc')->paginate(30);
+        $triages = Triage::orderBy('created_at', 'desc')->paginate(30);
         $colors = ['Rojo' => '#DC2626', 'Naranja' => '#EA580C', 'Amarillo' => '#F59E0B', 'Verde' => '#F97316', 'Azul' => '#3B82F6'];
-        return view('enfermeria.triage', compact('patients', 'colors'));
+        $bdTotalDocs = \App\Models\MongoTriageLog::where('timestamp', '>=', now()->startOfDay())->count();
+        $bdTodayPatients = \App\Models\MongoTriageLog::where('timestamp', '>=', now()->startOfDay())->count();
+        $bdAvgFc = round(\App\Models\MongoTriageLog::where('timestamp', '>=', now()->startOfDay())->avg('vitals_fc') ?? 0);
+        $bdRojoHoy = \App\Models\MongoTriageLog::where('timestamp', '>=', now()->startOfDay())->where('triage_level', 'Rojo')->count();
+        return view('superadmin.urgencias', compact('triages', 'colors', 'bdTotalDocs', 'bdTodayPatients', 'bdAvgFc', 'bdRojoHoy'));
     }
 
     public function signosVitales()
@@ -97,7 +101,7 @@ class NurseController extends Controller
 
     public function pacientes()
     {
-        $patients = Triage::orderBy('created_at', 'desc')->paginate(30);
+        $triages = Triage::orderBy('created_at', 'desc')->paginate(30);
         $colors = ['Rojo' => '#DC2626', 'Naranja' => '#EA580C', 'Amarillo' => '#F59E0B', 'Verde' => '#F97316', 'Azul' => '#3B82F6'];
         $statusColors = ['En Espera' => '#F59E0B', 'En Atención' => '#EA580C', 'Hospitalizado' => '#DC2626', 'Alta' => '#F97316'];
         return view('enfermeria.pacientes', compact('patients', 'colors', 'statusColors'));
@@ -175,12 +179,75 @@ class NurseController extends Controller
         return back()->with('success', "Cama liberada.");
     }
 
-    public function storeTriage(Request $request)
-    {
-        $request->validate(["patient_name" => "required", "triage_level" => "required", "symptoms" => "required"]);
-        Triage::create(["patient_name" => $request->patient_name, "triage_level" => $request->triage_level, "status" => "En Espera", "age" => $request->age ?? 30, "symptoms" => $request->symptoms, "chief_complaint" => $request->chief_complaint ?? $request->symptoms, "created_by" => auth()->id()]);
-        return back()->with("success", "Paciente registrado en triage.");
+    
+    public function storeTriage(Request $request) {
+
+        // ==========================================
+        // ETL: DROPLICATES EN TIEMPO REAL
+        // ==========================================
+        $existingPatient = Triage::where('patient_name', $request->patient_name)
+            ->where('age', $request->age)
+            ->whereIn('status', ['En Espera', 'En Atención'])
+            ->whereDate('created_at', today())
+            ->first();
+        if ($existingPatient) {
+            return back()->with('etl_error', 'ETL Big Data: Registro bloqueado. El paciente ya esta activo en Urgencias hoy (Duplicado evitado).');
+        }
+
+        $validated = $request->validate([
+            'patient_name' => 'required|string',
+            'triage_level' => 'required|string',
+            'age' => 'required|integer',
+            'chief_complaint' => 'nullable|string'
+        ]);
+
+        // LÓGICA ETL APLICADA EN TIEMPO REAL (UPSERT / DROPDUPLICATES)
+        $existingPatient = Triage::where('patient_name', $validated['patient_name'])
+            ->where('age', $validated['age'])
+            ->whereIn('status', ['En Espera', 'En Atención'])
+            ->whereDate('created_at', today())
+            ->first();
+
+        if ($existingPatient) {
+            $existingPatient->update([
+                'triage_level' => $validated['triage_level'],
+                'chief_complaint' => $validated['chief_complaint'] ?? $existingPatient->chief_complaint,
+            ]);
+        // ETL: CARGA EN MONGODB ATLAS (DATA WAREHOUSE) EN TIEMPO REAL
+        \App\Models\MongoTriageLog::create([
+            'patient_id' => $request->patient_name,
+            'triage_level' => $request->triage_level,
+            'age' => $request->age,
+            'specialty' => 'Urgencias',
+            'vitals_fc' => $request->vitals_fc ?? 80,
+            'vitals_temp' => $request->vitals_temp ?? 36.5,
+            'vitals_spo2' => $request->vitals_spo2 ?? 98,
+            'timestamp' => now()
+        ]);
+
+        // ==========================================
+        // ETL: CARGA EN MONGODB ATLAS (REAL TIME)
+        // ==========================================
+        \App\Models\MongoTriageLog::create([
+            'patient_id' => $request->patient_name,
+            'triage_level' => $request->triage_level,
+            'age' => $request->age,
+            'specialty' => 'Urgencias',
+            'vitals_fc' => $request->vitals_fc ?? 80,
+            'vitals_temp' => $request->vitals_temp ?? 36.5,
+            'vitals_spo2' => $request->vitals_spo2 ?? 98,
+            'timestamp' => now()
+        ]);
+
+            return back()->with('status', 'Paciente actualizado. Se evitó un registro duplicado en el sistema.');
+        }
+
+        $validated['status'] = 'En Espera';
+        $validated['symptoms'] = $validated['symptoms'] ?? $validated['chief_complaint'] ?? 'Pendiente';
+        Triage::create($validated);
+        return back()->with('status', 'Paciente ingresado correctamente.');
     }
+
 
     public function darAlta($id)
     {
@@ -207,4 +274,59 @@ class NurseController extends Controller
         $pacientes = Triage::whereIn('status', ['En Espera', 'En Atención'])->whereNotNull('patient_name')->select('id', 'patient_name', 'triage_level')->orderBy('created_at', 'desc')->limit(50)->get();
         return response()->json($pacientes);
     }
+
+    
+
+
+    
+
+
+    
+
+
+    public function bigdata()
+    {
+        $today = now()->startOfDay();
+        $logs = \App\Models\MongoTriageLog::where('timestamp', '>=', $today)->get();
+
+        $fc = $logs->pluck('vitals_fc')->sort()->values();
+        $c = $fc->count();
+
+        $getP = function($arr, $p) use ($c) {
+            if ($c == 0) return 0;
+            $index = ($p / 100) * ($c - 1);
+            $lower = (int) floor($index);
+            $upper = (int) ceil($index);
+            if ($lower === $upper) return round($arr[$lower], 2);
+            return round($arr[$lower] + ($index - $lower) * ($arr[$upper] - $arr[$lower]), 2);
+        };
+
+        $fcMean = $fc->avg() ?? 0;
+        $fcStd = $c > 0 ? round(sqrt($fc->map(fn($v) => pow($v - $fcMean, 2))->avg()), 2) : 0;
+
+        $stats = [
+            'total' => $c,
+            'avg_fc' => round($fcMean, 2),
+            'max_fc' => $fc->max() ?? 0,
+            'min_fc' => $fc->min() ?? 0,
+            'mode_fc' => $c > 0 ? round($fc->mode()[0], 2) : 0,
+            'std_fc' => $fcStd,
+            'p10' => $getP($fc, 10), 'p25' => $getP($fc, 25),
+            'p50' => $getP($fc, 50), 'p75' => $getP($fc, 75),
+            'p90' => $getP($fc, 90), 'p95' => $getP($fc, 95), 'p99' => $getP($fc, 99),
+            'iqr' => round($getP($fc, 75) - $getP($fc, 25), 2),
+            'avg_temp' => round($logs->avg('vitals_temp') ?? 0, 1),
+            'avg_spo2' => round($logs->avg('vitals_spo2') ?? 0, 0)
+        ];
+
+        $dist = $logs->groupBy('triage_level')->map->count();
+
+        // División KDD (70/20/10)
+        $train = round($c * 0.70);
+        $test = round($c * 0.20);
+        $val = $c - $train - $test;
+
+        return view('enfermeria.bigdata', compact('stats', 'dist', 'train', 'test', 'val'));
+    }
+
 }

@@ -146,10 +146,12 @@ Route::middleware(['auth', 'verified', 'role:Médico A,Médico B,Médico C,Espec
 // ==========================================
 // ENFERMERÍA
 // ==========================================
-Route::middleware(['auth', 'verified', 'role:Enfermera A,Enfermera B,Enfermera C'])->prefix('enfermeria')->name('enfermeria.')->group(function () {
+Route::middleware(['auth', 'verified', 'role:Enfermera,Enfermera A,Enfermera B,Enfermera C'])->prefix('enfermeria')->name('enfermeria.')->group(function () {
     Route::get('/dashboard', [NurseController::class, 'dashboard'])->name('dashboard');
     Route::get('/triage', [NurseController::class, 'triage'])->name('triage');
-    Route::post('/triage', [NurseController::class, 'storeTriage'])->name('storeTriage');
+    Route::get('/bigdata', [NurseController::class, 'bigdata'])->name('bigdata');
+
+    Route::post('/triage', [NurseController::class, 'storeTriage'])->name('nurse.storeTriage');
     Route::get('/signos-vitales', [NurseController::class, 'signosVitales'])->name('signos');
     Route::post('/signos-vitales', [NurseController::class, 'storeSignos'])->name('storeSignos');
     Route::post('/signos-vitales/store', [NurseController::class, 'storeSignos'])->name('storeVitals');

@@ -1,15 +1,75 @@
-@extends('superadmin.layout')
+@php $isAdmin = auth()->user()->role === 'SuperAdmin' || auth()->user()->role === 'Administrador'; @endphp
+@extends($isAdmin ? 'superadmin.layout' : 'enfermeria.layout')
 @section('title', 'Centro de Control de Urgencias')
-@section('nav-urgencias', 'active')
+@section($isAdmin ? 'nav-urgencias' : 'nav-triage', 'active')
 
 @section('content')
+
+    @if(session('status'))
+    <div style="background:#ECFDF5; border:1px solid #A7F3D0; color:#065F46; padding:1rem; border-radius:8px; margin-bottom:1rem; font-weight:600; display:flex; align-items:center; gap:0.5rem;">
+        <span style="font-size:1.2rem;">&#10003;</span> {{ session('status') }}
+    </div>
+    @endif
+
+    @if(session('etl_error'))
+    <div style="background:#FEF2F2; border:1px solid #FECACA; color:#991B1B; padding:1rem; border-radius:8px; margin-bottom:1rem; font-weight:600; display:flex; align-items:center; gap:0.5rem;">
+        <span style="font-size:1.2rem;">&#9888;</span> {{ session('etl_error') }}
+    </div>
+    @endif
+
+
+<!-- PANEL BIG DATA EN VIVO (100% MONGODB ATLAS) -->
+<div style="background: linear-gradient(135deg, #0D1117 0%, #161B22 100%); border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; border: 1px solid #30363D; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; color: white; font-family: system-ui;">
+    <div style="text-align: center; border-right: 1px solid #30363D; padding-right: 1rem;">
+        <div style="font-size: 0.8rem; color: #8B949E; margin-bottom: 0.5rem;">INGRESOS HOY (ATLAS)</div>
+        <div style="font-size: 1.8rem; font-weight: 800; color: #3FB950;">{{ $bdTotalDocs }}</div>
+        <div style="font-size: 0.7rem; color: #8B949E;">Documentos en la nube</div>
+    </div>
+    <div style="text-align: center; border-right: 1px solid #30363D; padding-right: 1rem;">
+        <div style="font-size: 0.8rem; color: #8B949E; margin-bottom: 0.5rem;">EN ESPERA AHORA</div>
+        <div style="font-size: 1.8rem; font-weight: 800; color: #58A6FF;">{{ $bdTodayPatients }}</div>
+        <div style="font-size: 0.7rem; color: #8B949E;">Pendientes de atención</div>
+    </div>
+    <div style="text-align: center; border-right: 1px solid #30363D; padding-right: 1rem;">
+        <div style="font-size: 0.8rem; color: #8B949E; margin-bottom: 0.5rem;">FC PROMEDIO HOY</div>
+        <div style="font-size: 1.8rem; font-weight: 800; color: #D2A8FF;">{{ $bdAvgFc }} bpm</div>
+        <div style="font-size: 0.7rem; color: #8B949E;">Frecuencia Cardiaca Media</div>
+    </div>
+    <div style="text-align: center; display: flex; align-items: center; justify-content: center;">
+        <div>
+            <div style="font-size: 1.8rem; font-weight: 800; color: #EF4444;">{{ $bdRojoHoy }}</div>
+            <div style="font-size: 0.7rem; color: #EF4444; font-weight: 700;">Triage Rojo Hoy</div>
+        </div>
+    </div>
+</div>
+    <div style="text-align: center; border-right: 1px solid #30363D; padding-right: 1rem;">
+        <div style="font-size: 0.8rem; color: #8B949E; margin-bottom: 0.5rem;">PACIENTES HOY (ATLAS)</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: #58A6FF;">{{ $bdTodayPatients }}</div>
+        <div style="font-size: 0.7rem; color: #8B949E;">Registrados en la nube</div>
+    </div>
+    <div style="text-align: center; border-right: 1px solid #30363D; padding-right: 1rem;">
+        <div style="font-size: 0.8rem; color: #8B949E; margin-bottom: 0.5rem;">FC PROMEDIO HOY</div>
+        <div style="font-size: 1.5rem; font-weight: 800; color: #D2A8FF;">{{ $bdAvgFc }} bpm</div>
+        <div style="font-size: 0.7rem; color: #8B949E;">Frecuencia Cardiaca Media</div>
+    </div>
+    <div style="text-align: center; display: flex; align-items: center; justify-content: center;">
+        <div>
+            <div style="font-size: 2rem; color: #3FB950;">&#10003;</div>
+            <div style="font-size: 0.7rem; color: #3FB950; font-weight: 700;">ETL Sincronizado</div>
+        </div>
+    </div>
+</div>
+
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
     <div>
         <h3 style="font-weight: 800; color: #1E1A17;">Sala de Urgencias - Triage Manchester</h3>
         <p style="color: #736860; font-size: 0.85rem;">Clasificación, asignación y derivación en tiempo real.</p>
     </div>
     <button onclick="document.getElementById('modal-add-patient').style.display='flex'" style="background: #C7291C; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 700; cursor: pointer;">
-        <i class="fas fa-ambulance"></i> Ingreso de Urgencia
+        <a href="{{ auth()->user()->role === 'SuperAdmin' || auth()->user()->role === 'Administrador' ? route('superadmin.bigdata') : route('enfermeria.bigdata') }}" style="background: #2563EB; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 700; cursor: pointer; text-decoration: none; margin-right: 10px;">
+        <i class="fas fa-chart-bar"></i> Dashboard Big Data
+    </a>
+    <i class="fas fa-ambulance"></i> Ingreso de Urgencia
     </button>
 </div>
 
@@ -45,6 +105,45 @@
             @endforeach
         </div>
     @endforeach
+</div>
+
+
+<!-- Modal Ingreso de Urgencia -->
+<div id="modal-add-patient" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:100; align-items:center; justify-content:center;">
+    <div style="background:white; padding:2rem; border-radius:8px; width:500px; max-width:90%;">
+        <h3 style="font-weight:700; margin-bottom:1rem; color:#1C1917;">Ingreso de Urgencia</h3>
+        <form action="{{ url()->current() }}" method="POST">
+            @csrf
+            <div style="margin-bottom: 0.8rem;">
+                <label style="font-size:0.85rem; font-weight:600; color:#374151;">Nombre del Paciente</label>
+                <input type="text" name="patient_name" required style="width:100%; padding:0.5rem; border:1px solid #D1D5DB; border-radius:6px; margin-top:0.3rem;">
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0.8rem;">
+                <div>
+                    <label style="font-size:0.85rem; font-weight:600; color:#374151;">Nivel de Triage</label>
+                    <select name="triage_level" required style="width:100%; padding:0.5rem; border:1px solid #D1D5DB; border-radius:6px; margin-top:0.3rem;">
+                        <option value="Rojo">Rojo</option>
+                        <option value="Naranja">Naranja</option>
+                        <option value="Amarillo" selected>Amarillo</option>
+                        <option value="Verde">Verde</option>
+                        <option value="Azul">Azul</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:0.85rem; font-weight:600; color:#374151;">Edad</label>
+                    <input type="number" name="age" required style="width:100%; padding:0.5rem; border:1px solid #D1D5DB; border-radius:6px; margin-top:0.3rem;">
+                </div>
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="font-size:0.85rem; font-weight:600; color:#374151;">Motivo de Consulta</label>
+                <textarea name="chief_complaint" rows="3" style="width:100%; padding:0.5rem; border:1px solid #D1D5DB; border-radius:6px; margin-top:0.3rem;"></textarea>
+            </div>
+            <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+                <button type="button" onclick="document.getElementById('modal-add-patient').style.display='none'" style="background:#E5E7EB; color:#1C1917; border:none; padding:0.6rem 1.2rem; border-radius:6px; font-weight:600; cursor:pointer;">Cancelar</button>
+                <button type="submit" style="background:#C7291C; color:white; border:none; padding:0.6rem 1.2rem; border-radius:6px; font-weight:600; cursor:pointer;">Registrar Paciente</button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <!-- Modal Tomar Signos Vitales -->

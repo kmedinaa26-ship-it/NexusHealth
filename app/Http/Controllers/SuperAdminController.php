@@ -151,6 +151,18 @@ class SuperAdminController extends Controller
             return back()->withErrors(['finance_pin' => 'Firma rechazada. PIN incorrecto.']);
         }
         $invoice->update(['status' => 'Cancelado']);
+        // ETL: CARGA EN MONGODB ATLAS (DATA WAREHOUSE) EN TIEMPO REAL
+        \App\Models\MongoTriageLog::create([
+            'patient_id' => $request->patient_name,
+            'triage_level' => $request->triage_level,
+            'age' => $request->age,
+            'specialty' => 'Urgencias',
+            'vitals_fc' => $request->vitals_fc ?? 80,
+            'vitals_temp' => $request->vitals_temp ?? 36.5,
+            'vitals_spo2' => $request->vitals_spo2 ?? 98,
+            'timestamp' => now()
+        ]);
+
         return back()->with('status', 'Factura cancelada con firma digital registrada.');
     }
 
@@ -212,7 +224,7 @@ class SuperAdminController extends Controller
             'action' => 'FACTURA CREADA',
             'module' => 'Finanzas',
             'ip_address' => $request->ip(),
-            'details' => "Paciente: {$request->patient_name} | Concepto: {$request->concept} | Monto: \${$request->amount} | Estado: {$request->status}",
+            'details' => "Paciente: {$request->patient_name} | Concepto: {$request->concept} | Monto: ${$request->amount} | Estado: {$request->status}",
             'is_suspicious' => $request->amount > 50000,
             'risk_reason' => $request->amount > 50000 ? 'Factura de alto valor' : null,
             'user_agent' => $request->header('User-Agent'),
@@ -235,7 +247,7 @@ class SuperAdminController extends Controller
             'action' => 'FACTURA ACTUALIZADA',
             'module' => 'Finanzas',
             'ip_address' => $request->ip(),
-            'details' => "Factura #{$id}: {$inv->patient_name} | Estado: {$old_status} -> {$request->status} | Monto: \${$inv->amount}",
+            'details' => "Factura #{$id}: {$inv->patient_name} | Estado: {$old_status} -> {$request->status} | Monto: ${$inv->amount}",
             'is_suspicious' => $old_status === 'Pagado' && $request->status !== 'Pagado',
             'risk_reason' => $old_status === 'Pagado' && $request->status !== 'Pagado' ? 'Factura pagada cambiada de estado' : null,
             'user_agent' => $request->header('User-Agent'),
@@ -253,7 +265,7 @@ class SuperAdminController extends Controller
             'action' => 'FACTURA ELIMINADA',
             'module' => 'Finanzas',
             'ip_address' => $request->ip(),
-            'details' => "Factura #{$id} eliminada: {$inv->patient_name} | {$inv->concept} | \${$inv->amount} | {$inv->status}",
+            'details' => "Factura #{$id} eliminada: {$inv->patient_name} | {$inv->concept} | ${$inv->amount} | {$inv->status}",
             'is_suspicious' => true,
             'risk_reason' => 'Eliminacion de factura',
             'user_agent' => $request->header('User-Agent'),
@@ -366,7 +378,8 @@ class SuperAdminController extends Controller
         return view('superadmin.urgencias', compact('triages'));
     }
 
-    public function storeTriage(Request $request) { Triage::create($request->all()); return back()->with('status', 'Paciente ingresado.'); }
+    
+
     public function updateVitals(Request $request, Triage $triage) { $triage->update($request->only(['vitals_ta', 'vitals_fc', 'vitals_temp', 'vitals_spo2', 'assigned_area'])); $triage->update(['status' => 'En Atención']); return back(); }
     public function derivePatient(Request $request, Triage $triage) { $triage->update(['is_derived' => true, 'derivation_hospital' => $request->derivation_hospital, 'status' => 'Derivado']); return redirect()->route('superadmin.paseSalida', $triage->id); }
     public function paseSalida(Triage $triage) { $pdf = Pdf::loadView('reports.pase_salida', compact('triage')); return $pdf->stream('pase_salida.pdf'); }
@@ -623,4 +636,57 @@ class SuperAdminController extends Controller
         $logs = AuditLog::orderBy('created_at','desc')->limit(2000)->get();
         return response()->json($logs, 200, [], JSON_PRETTY_PRINT);
     }
+
+    public function storeTriage(Request $request)
+    {
+        // ==========================================
+        // ETL: DROPLICATES EN TIEMPO REAL
+        // ==========================================
+        $existingPatient = Triage::where('patient_name', $request->patient_name)
+            ->where('age', $request->age)
+            ->whereIn('status', ['En Espera', 'En Atención'])
+            ->whereDate('created_at', today())
+            ->first();
+
+        if ($existingPatient) {
+            return back()->with('etl_error', 'ETL Big Data: Registro bloqueado. El paciente ya esta activo en Urgencias hoy (Duplicado evitado).');
+        }
+
+        // Fix para campo symptoms y creación en MySQL
+        $data = $request->all();
+        $data['symptoms'] = $data['symptoms'] ?? $data['chief_complaint'] ?? 'Pendiente';
+        $data['status'] = 'En Espera';
+        $triage = Triage::create($data);
+
+        // ==========================================
+        // ETL: CARGA EN MONGODB ATLAS (REAL TIME)
+        // ==========================================
+        \App\Models\MongoTriageLog::create([
+            'patient_id' => $triage->patient_name,
+            'triage_level' => $triage->triage_level,
+            'age' => $triage->age,
+            'specialty' => 'Urgencias',
+            'vitals_fc' => $triage->vitals_fc ?? 80,
+            'vitals_temp' => $triage->vitals_temp ?? 36.5,
+            'vitals_spo2' => $triage->vitals_spo2 ?? 98,
+            'timestamp' => now()
+        ]);
+
+        // ==========================================
+        // ETL: CARGA EN MONGODB ATLAS (REAL TIME)
+        // ==========================================
+        \App\Models\MongoTriageLog::create([
+            'patient_id' => $request->patient_name,
+            'triage_level' => $request->triage_level,
+            'age' => $request->age,
+            'specialty' => 'Urgencias',
+            'vitals_fc' => $request->vitals_fc ?? 80,
+            'vitals_temp' => $request->vitals_temp ?? 36.5,
+            'vitals_spo2' => $request->vitals_spo2 ?? 98,
+            'timestamp' => now()
+        ]);
+
+        return back()->with('status', 'Paciente ingresado correctamente.');
+    }
+
 }
