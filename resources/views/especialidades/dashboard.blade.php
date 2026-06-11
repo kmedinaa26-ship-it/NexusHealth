@@ -99,11 +99,4 @@
     @endif
 </div>
 
-<script>
-// Update sidebar stats
-document.getElementById('stat-hosp').textContent = '{{ $hospitalized ?? 0 }}';
-document.getElementById('stat-camas').textContent = '{{ $bedsAvailable ?? 0 }}';
-document.getElementById('stat-criticos').textContent = '{{ $criticalPatients->count() }}';
-document.getElementById('stat-mios').textContent = '{{ $myPatients->count() }}';
-</script>
 @endsection

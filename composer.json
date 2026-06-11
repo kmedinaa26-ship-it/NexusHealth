@@ -10,7 +10,7 @@
         "barryvdh/laravel-dompdf": "^3.1",
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0",
-        "mongodb/laravel-mongodb": "^5.7",
+        "mongodb/laravel-mongodb": "^5.8",
         "openai-php/laravel": "^0.19.1"
     },
     "require-dev": {

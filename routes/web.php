@@ -326,3 +326,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 require __DIR__.'/auth.php';
 
 // ==================================================
+
+// ==========================================
+// MÓDULO DE BIG DATA Y DATA WAREHOUSE
+// ==========================================
+Route::middleware(['auth', 'verified', 'role:SuperAdmin,Administrador'])->group(function () {
+    Route::get('/superadmin/bigdata', [App\Http\Controllers\BigDataController::class, 'dashboard'])->name('superadmin.bigdata');
+    Route::post('/superadmin/bigdata/run-etl', [App\Http\Controllers\BigDataController::class, 'runETL'])->name('superadmin.bigdata.etl');
+    Route::get("/bigdata/export-csv", [App\Http\Controllers\BigDataController::class, "exportCSV"])->name("superadmin.bigdata.csv");
+});
+Route::get("/superadmin/bigdata/export-csv", [App\Http\Controllers\BigDataController::class, "exportCSV"])->name("superadmin.bigdata.csv");

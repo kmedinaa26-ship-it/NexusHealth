@@ -57,6 +57,7 @@
             <div class="menu-category">Finanzas y Seguridad</div>
             <a href="{{ route('superadmin.finanzas') }}" class="menu-item @yield('nav-finanzas')"><i class="fas fa-lock"></i> Finanzas (PIN)</a>
             <a href="{{ route('superadmin.auditoria') }}" class="menu-item @yield('nav-auditoria')"><i class="fas fa-scroll"></i> Auditoria</a>
+        <a href="{{ url('/superadmin/bigdata') }}" style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.8rem;color:#78716C;text-decoration:none;font-size:0.82rem;font-weight:600;border-radius:8px;transition:0.15s"><i class="fas fa-database" style="width:18px;text-align:center;color:#7C3AED"></i> Big Data & DWH</a>
             <a href="{{ route('superadmin.actividadSospechosa') }}" class="menu-item @yield('nav-sospechosa')"><i class="fas fa-skull-crossbones"></i> Sospechosos</a>
             <a href="{{ route('superadmin.monitorLive') }}" class="menu-item @yield('nav-monitor')"><i class="fas fa-broadcast-tower"></i> Monitor Live</a>
 

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "14542b7afec52deb6613e8776220a2bb",
+    "content-hash": "edee386552e93ca70033e0e49453e85c",
     "packages": [
         {
             "name": "barryvdh/laravel-dompdf",
@@ -2327,16 +2327,16 @@
         },
         {
             "name": "mongodb/laravel-mongodb",
-            "version": "5.7.1",
+            "version": "5.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mongodb/laravel-mongodb",
-                "reference": "6e371e8e6deb9193f99a84c578e6c9d0a960e43a"
+                "reference": "e7ffd4fe50b66ef5ab9659b2d4f62ba4c1816d33"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mongodb/laravel-mongodb/zipball/6e371e8e6deb9193f99a84c578e6c9d0a960e43a",
-                "reference": "6e371e8e6deb9193f99a84c578e6c9d0a960e43a",
+                "url": "https://api.github.com/repos/mongodb/laravel-mongodb/zipball/e7ffd4fe50b66ef5ab9659b2d4f62ba4c1816d33",
+                "reference": "e7ffd4fe50b66ef5ab9659b2d4f62ba4c1816d33",
                 "shasum": ""
             },
             "require": {
@@ -2366,7 +2366,8 @@
                 "phpstan/phpstan": "^1.10|^2.1",
                 "phpunit/phpunit": "^10.3|^11.5.3|^12.5.12",
                 "rector/rector": "^1.2|^2.3",
-                "spatie/laravel-query-builder": "^5.6|^6"
+                "spatie/laravel-query-builder": "^5.6|^6",
+                "symfony/polyfill-php86": "^1.37"
             },
             "suggest": {
                 "league/flysystem-gridfs": "Filesystem storage in MongoDB with GridFS"
@@ -2430,7 +2431,7 @@
                 "issues": "https://www.mongodb.com/support",
                 "security": "https://www.mongodb.com/security"
             },
-            "time": "2026-04-15T12:18:12+00:00"
+            "time": "2026-06-08T14:14:06+00:00"
         },
         {
             "name": "mongodb/mongodb",
