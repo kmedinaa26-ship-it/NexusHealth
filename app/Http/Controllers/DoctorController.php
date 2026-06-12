@@ -245,7 +245,6 @@ class DoctorController extends Controller
             'triage_id' => $request->triage_id,
             'patient_id' => $request->triage_id,
             'medication_id' => $request->medication_id,
-            'doctor_id' => Auth::id(),
             'quantity' => $request->quantity ?? 1,
             'dosis' => $request->dosis,
             'frecuencia' => $request->frecuencia,
@@ -341,14 +340,17 @@ class DoctorController extends Controller
 
     public function storeHospitalizacion(Request $request)
     {
+        $triage = Triage::find($request->triage_id);
         Hospitalization::create([
             'triage_id' => $request->triage_id,
-            'patient_id' => $request->triage_id,
-            'admission_date' => now(), 'diagnostico' => $request->diagnostico, 'status' => 'Activa',
+            'patient_name' => $triage->patient_name ?? 'Paciente',
+            'bed_id' => $request->bed_id,
+            'admission_date' => now(),
+            'diagnosis' => $request->diagnostico,
+            'status' => 'Ingresado',
         ]);
         $bed = Bed::find($request->bed_id);
-        if ($bed) $bed->update(['status' => 'Ocupada']);
-        $triage = Triage::find($request->triage_id);
+        if ($bed) $bed->update(['status' => 'Ocupada', 'patient_name' => $triage->patient_name ?? null, 'triage_level' => $triage->triage_level ?? null]);
         if ($triage) $triage->update(['status' => 'Hospitalizado']);
         return back()->with('success', 'Paciente hospitalizado');
     }
@@ -440,17 +442,20 @@ class DoctorController extends Controller
 
     public function storeEvolucion(Request $request)
     {
+        $triage = Triage::find($request->triage_id);
         NurseEvolution::create([
             'triage_id' => $request->triage_id,
-            'patient_id' => $request->triage_id,
-            'notes' => $request->notes, 'priority' => $request->priority ?? 'Normal',
+            'patient_name' => $triage->patient_name ?? 'Paciente',
+            'nurse_id' => Auth::id(),
+            'observation' => $request->notes,
+            'priority' => $request->priority ?? 'Normal',
         ]);
         return back()->with('success', 'Nota de evolución guardada');
     }
 
     public function actualizarEvolucion(Request $request, $id)
     {
-        NurseEvolution::findOrFail($id)->update(['notes' => $request->notes, 'priority' => $request->priority]);
+        NurseEvolution::findOrFail($id)->update([ 'observation' => $request->notes, 'priority' => $request->priority]);
         return back()->with('success', 'Nota actualizada');
     }
 
@@ -481,7 +486,6 @@ class DoctorController extends Controller
         $certNum = 'DEF-' . date('Y') . '-' . str_pad(\DB::table('patient_deaths')->count() + 1, 4, '0', STR_PAD_LEFT);
 
         \DB::table('patient_deaths')->insert([
-            'triage_id' => $id, 'doctor_id' => Auth::id(),
             'bed_id' => $request->bed_id ?? null,
             'death_time' => now(), 'cause_of_death' => $request->cause_of_death,
             'immediate_cause' => $request->immediate_cause,
@@ -532,7 +536,6 @@ class DoctorController extends Controller
         if (session('doctor_profile') !== 'Médico A') return back()->with('error', 'Solo Médico A');
         $request->validate(['hospital_destino' => 'required', 'motivo' => 'required']);
         \DB::table('derivations')->insert([
-            'triage_id' => $id, 'doctor_id' => Auth::id(),
             'hospital_destino' => $request->hospital_destino, 'motivo' => $request->motivo,
             'status' => 'Pendiente', 'created_at' => now(), 'updated_at' => now(),
         ]);

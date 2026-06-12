@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class NurseEvolution extends Model
 {
     protected $fillable = [
-        'triage_id', 'nurse_id', 'notes', 'priority', 'alert_doctor',
+        'triage_id', 'nurse_id', 'patient_name', 'observation', 'intervention', 'response', 'priority', 'alert_doctor',
     ];
 
     public function triage() { return $this->belongsTo(Triage::class); }

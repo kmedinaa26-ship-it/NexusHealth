@@ -67,7 +67,7 @@ class NurseController extends Controller
         $request->validate(['triage_id' => 'required|exists:triages,id', 'bed_id' => 'required|exists:beds,id', 'diagnosis' => 'required']);
         $triage = Triage::findOrFail($request->triage_id);
         $bed = Bed::findOrFail($request->bed_id);
-        Hospitalization::create(['triage_id' => $request->triage_id, 'bed_id' => $request->bed_id, 'doctor_id' => $request->doctor_id ?? null, 'nurse_id' => auth()->id(), 'admission_date' => now(), 'diagnosis' => $request->diagnosis, 'status' => 'Activa']);
+        Hospitalization::create(['triage_id' => $request->triage_id, 'bed_id' => $request->bed_id, 'doctor_id' => $request->doctor_id ?? null, 'nurse_id' => auth()->id(), 'admission_date' => now(), 'diagnosis' => $request->diagnosis, 'status' => 'Ingresado']);
         $bed->update(['status' => 'Ocupada', 'patient_name' => $triage->patient_name, 'triage_level' => $triage->triage_level]);
         $triage->update(['status' => 'Hospitalizado']);
         AuditLog::create(['user_id' => auth()->id(), 'user_name' => auth()->user()->name, 'user_role' => auth()->user()->role, 'action' => 'Hospitalización', 'module' => 'Enfermería', 'ip_address' => $request->ip(), 'details' => $triage->patient_name]);
@@ -85,7 +85,6 @@ class NurseController extends Controller
     {
         $request->validate(['triage_id' => 'required|exists:triages,id', 'notes' => 'required']);
         $triage = Triage::findOrFail($request->triage_id);
-        NurseEvolution::create(['triage_id' => $request->triage_id, 'nurse_id' => auth()->id(), 'notes' => $request->notes, 'vitals' => $request->vitals ?? null]);
         AuditLog::create(['user_id' => auth()->id(), 'user_name' => auth()->user()->name, 'user_role' => auth()->user()->role, 'action' => 'Nota de Evolución', 'module' => 'Enfermería', 'ip_address' => $request->ip(), 'details' => $triage->patient_name]);
         return back()->with('success', 'Nota de evolución registrada.');
     }
