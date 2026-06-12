@@ -375,7 +375,12 @@ class SuperAdminController extends Controller
     // --- URGENCIAS ---
     public function urgencias() {
         $triages = Triage::orderBy('created_at', 'desc')->paginate(30);
-        return view('superadmin.urgencias', compact('triages'));
+        $colors = ['Rojo' => '#DC2626', 'Naranja' => '#EA580C', 'Amarillo' => '#F59E0B', 'Verde' => '#F97316', 'Azul' => '#3B82F6'];
+        $bdTotalDocs = \App\Models\MongoTriageLog::where('timestamp', '>=', now()->startOfDay())->count();
+        $bdTodayPatients = \App\Models\MongoTriageLog::where('timestamp', '>=', now()->startOfDay())->count();
+        $bdAvgFc = round(\App\Models\MongoTriageLog::where('timestamp', '>=', now()->startOfDay())->avg('vitals_fc') ?? 0);
+        $bdRojoHoy = \App\Models\MongoTriageLog::where('timestamp', '>=', now()->startOfDay())->where('triage_level', 'Rojo')->count();
+        return view('superadmin.urgencias', compact('triages', 'colors', 'bdTotalDocs', 'bdTodayPatients', 'bdAvgFc', 'bdRojoHoy'));
     }
 
     
