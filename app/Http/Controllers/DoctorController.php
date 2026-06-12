@@ -243,6 +243,7 @@ class DoctorController extends Controller
     {
         \DB::table('prescriptions')->insert([
             'triage_id' => $request->triage_id,
+            'patient_id' => $request->triage_id,
             'medication_id' => $request->medication_id,
             'doctor_id' => Auth::id(),
             'quantity' => $request->quantity ?? 1,
@@ -285,7 +286,8 @@ class DoctorController extends Controller
     public function storeEstudio(Request $request)
     {
         \DB::table('medical_studies')->insert([
-            'triage_id' => $request->triage_id, 'doctor_id' => Auth::id(),
+            'triage_id' => $request->triage_id,
+            'patient_id' => $request->triage_id,
             'tipo' => $request->tipo, 'prioridad' => $request->prioridad,
             'notas' => $request->notas, 'status' => 'Solicitado',
             'created_at' => now(), 'updated_at' => now(),
@@ -340,7 +342,8 @@ class DoctorController extends Controller
     public function storeHospitalizacion(Request $request)
     {
         Hospitalization::create([
-            'triage_id' => $request->triage_id, 'bed_id' => $request->bed_id,
+            'triage_id' => $request->triage_id,
+            'patient_id' => $request->triage_id,
             'admission_date' => now(), 'diagnostico' => $request->diagnostico, 'status' => 'Activa',
         ]);
         $bed = Bed::find($request->bed_id);
@@ -391,7 +394,8 @@ class DoctorController extends Controller
     public function storeServicio(Request $request)
     {
         \DB::table('service_requests')->insert([
-            'triage_id' => $request->triage_id, 'doctor_id' => Auth::id(),
+            'triage_id' => $request->triage_id,
+            'patient_id' => $request->triage_id,
             'tipo' => $request->tipo, 'descripcion' => $request->descripcion,
             'prioridad' => $request->prioridad, 'status' => 'Pendiente',
             'created_at' => now(), 'updated_at' => now(),
@@ -437,7 +441,8 @@ class DoctorController extends Controller
     public function storeEvolucion(Request $request)
     {
         NurseEvolution::create([
-            'triage_id' => $request->triage_id, 'nurse_id' => Auth::id(),
+            'triage_id' => $request->triage_id,
+            'patient_id' => $request->triage_id,
             'notes' => $request->notes, 'priority' => $request->priority ?? 'Normal',
         ]);
         return back()->with('success', 'Nota de evolución guardada');

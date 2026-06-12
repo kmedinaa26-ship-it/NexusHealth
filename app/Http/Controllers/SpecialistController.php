@@ -37,7 +37,7 @@ class SpecialistController extends Controller
 
     public function agenda() { return view('especialidades.agenda'); }
     public function misPacientes() { return view('especialidades.pacientes'); }
-    public function hospitalizados() { return view('especialidades.hospitalizados'); }
+    public function hospitalizados() { $misHospitalizados = \App\Models\Triage::where('status', 'Hospitalizado')->orderBy('created_at', 'desc')->paginate(30); return view('especialidades.hospitalizados', compact('misHospitalizados')); }
     public function derivaciones() { return view('especialidades.derivaciones'); }
     public function reportes() { return view('especialidades.reportes'); }
     public function iaMedica() { return view('especialidades.ia-medica'); }
