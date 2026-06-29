@@ -175,15 +175,7 @@ class DoctorController extends Controller
     }
 
     // CONSULTA
-    public function storeConsulta(Request $request)
-    {
-        $request->validate(["paciente_id" => "required", "notas" => "required"]);
-        $p = Triage::findOrFail($request->paciente_id);
-        $p->update(["doctor_notes" => $request->notas, "status" => "En Atención"]);
-        return back()->with("success", "Consulta registrada");
-    }
-
-    public function consulta()
+       public function consulta()
     {
         $role = session('doctor_profile');
         $pacientes = Triage::where('assigned_doctor', Auth::id())
@@ -192,6 +184,55 @@ class DoctorController extends Controller
         return view('medico.consulta', compact('pacientes', 'role'));
     }
 
+    public function storeConsulta(Request $request)
+    {
+        $request->validate([
+            'paciente_id' => 'required',
+            'diagnostico' => 'required|string',
+            'tratamiento' => 'required|string'
+        ]);
+
+        $p = Triage::findOrFail($request->paciente_id);
+
+        // Formateamos las notas para que queden estructuradas en la BD
+        $notasCompletas = "Diagnóstico: " . $request->diagnostico . "\n" . 
+                          "Tratamiento: " . $request->tratamiento . "\n" . 
+                          "Notas: " . ($request->notas ?? 'Sin notas adicionales');
+
+        $p->update([
+            "doctor_notes" => $notasCompletas, 
+            "status" => "Dado de Alta"
+        ]);
+
+        // --- LÓGICA DE FACTURACIÓN INTEGRADA ---
+        $billingService = new \App\Services\BillingService();
+
+        // 1. Buscar el precio de la consulta en el catálogo (o usar un default)
+        $precioConsulta = 800.00;
+
+        // 2. Verificar si el paciente ya tiene cuenta abierta
+        $cuenta = \App\Models\PatientAccount::where('patient_id', $p->id)
+                                            ->where('status', 'abierta')
+                                            ->first();
+
+        // 3. Si no tiene cuenta, se abre una nueva
+        if (!$cuenta) {
+            $cuenta = $billingService->openAccount($p->id, 'consulta_externa', null, Auth::id());
+        }
+
+        // 4. Agregar el cargo a la cuenta
+        $billingService->addCharge($cuenta->id, [
+            'type' => 'servicio',
+            'concept' => 'Consulta Médica',
+            'quantity' => 1,
+            'unit_price' => $precioConsulta,
+            'discount' => 0,
+            'source_module' => 'medico',
+            'prescribed_by' => Auth::id()
+        ]);
+
+        return back()->with("success", "Consulta registrada y cargo de consultoría agregado a la cuenta del paciente.");
+    }
     // DIAGNÓSTICOS
     public function diagnosticos()
     {
@@ -241,8 +282,41 @@ class DoctorController extends Controller
 
     public function storeReceta(Request $request)
     {
+        $med = Medication::find($request->medication_id);
+        $doctorId = Auth::id();
+        
+        // SEGURIDAD: Si es controlado, requiere autorización del SuperAdmin
+        if ($med->required_level == 'A' || strtolower($med->type) == 'controlado') {
+            \DB::table('prescriptions')->insert([
+                'triage_id' => $request->triage_id,
+                'doctor_id' => $doctorId,
+                'patient_id' => $request->triage_id,
+                'medication_id' => $request->medication_id,
+                'quantity' => $request->quantity ?? 1,
+                'dosis' => $request->dosis,
+                'frecuencia' => $request->frecuencia,
+                'duracion' => $request->duracion,
+                'indicaciones' => $request->indicaciones,
+                'status' => 'Requiere Autorizacion',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            
+            \App\Models\MedicalAlert::create([
+                'triage_id' => $request->triage_id,
+                'patient_name' => 'Sistema',
+                'type' => 'Controlado',
+                'message' => 'Dr. ' . session('doctor_name') . ' solicita recetar ' . $med->name . ' (Controlado)',
+                'is_read' => 0,
+                'triggered_by' => Auth::id(),
+            ]);
+            
+            return back()->with('warning', 'Receta de controlado enviada. Requiere autorización del SuperAdmin.');
+        }
+
         \DB::table('prescriptions')->insert([
             'triage_id' => $request->triage_id,
+            'doctor_id' => $doctorId,
             'patient_id' => $request->triage_id,
             'medication_id' => $request->medication_id,
             'quantity' => $request->quantity ?? 1,
@@ -578,9 +652,18 @@ class DoctorController extends Controller
         return view('medico.controlados', compact('meds', 'role'));
     }
 
+    // 🚀 MÉTODO ACTUALIZADO CON IA Y PAGINACIÓN
+    // 🚀 MÉTODO ACTUALIZADO CON IA, ENSEMBLE Y MÉTRICAS
+    // 🚀 MÉTODO MEJORADO: IA, ENSEMBLE Y DATOS SEGUROS
+    // 🚀 MÉTODO ALINEADO CON TRIAGE REAL
+    // 🚀 MÉTODO COMPLETO: IA, XAI, MÉTRICAS Y PREDICCIÓN UCI
+    // 🚀 MÉTODO COMPLETO: 100% UNIDAD 3 - IA, XAI, SCORES, REGRESIÓN Y MÉTRICAS
+    // 🚀 MÉTODO DEFINITIVO: MÉTRICAS CORREGIDAS, XAI BARRAS, UCI CAMAS, FINANZAS
     public function iaMedica()
     {
-        return view('medico.ia-medica', ['role' => 'Médico A']);
+        $service    = new \App\Services\ML\IAMedicaService();
+        $resultados = $service->ejecutarPipeline();
+        return view('medico.ia-medica', compact('resultados'));
     }
 
     public function derivaciones()

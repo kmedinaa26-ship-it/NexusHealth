@@ -13,12 +13,20 @@ class Medication extends Model
         'name', 'active_ingredient', 'stock', 'min_stock', 'type',
         'price', 'required_level', 'enfermera_can_administer', 'origin',
         'lot_number', 'expiry_date', 'location', 'provider_name',
+        // Campos nuevos de facturación
+        'cost_price', 'sale_price', 'is_insumo'
     ];
 
     protected $casts = [
         'expiry_date' => 'date',
         'enfermera_can_administer' => 'boolean',
+        'is_insumo' => 'boolean',
     ];
+
+    // Accesor inteligente: Si hay sale_price lo usa, si no, usa el price normal
+    public function getVentaPriceAttribute() {
+        return $this->sale_price > 0 ? $this->sale_price : $this->price;
+    }
 
     public function isLowStock() {
         return $this->stock <= $this->min_stock;

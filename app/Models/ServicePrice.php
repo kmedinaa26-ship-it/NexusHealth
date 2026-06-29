@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Insurance extends Model
+class ServicePrice extends Model
 {
     protected $fillable = [
-        'name', 'coverage_meds', 'coverage_services', 'coverage_surgery'
+        'name', 'category', 'price', 'unit', 'is_active'
     ];
 }

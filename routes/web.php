@@ -338,3 +338,29 @@ Route::middleware(['auth', 'verified', 'role:SuperAdmin,Administrador'])->group(
     Route::get("/bigdata/export-csv", [App\Http\Controllers\BigDataController::class, "exportCSV"])->name("superadmin.bigdata.csv");
 });
 Route::get("/superadmin/bigdata/export-csv", [App\Http\Controllers\BigDataController::class, "exportCSV"])->name("superadmin.bigdata.csv");
+
+// Ruta temporal Dashboard ML
+
+Route::get('/ml-dashboard', [App\Http\Controllers\MLDashboardController::class, 'index'])->middleware('auth');
+
+
+// Rutas Farmacia POS
+Route::get('/farmacia/pos', [App\Http\Controllers\FarmaciaPOSController::class, 'index'])->name('farmacia.pos')->middleware('auth');
+Route::post('/farmacia/pos/venta', [App\Http\Controllers\FarmaciaPOSController::class, 'processSale'])->name('farmacia.pos.venta')->middleware('auth');
+Route::get('/farmacia/pos/ticket/{id}', [App\Http\Controllers\FarmaciaPOSController::class, 'downloadTicket'])->name('farmacia.pos.ticket')->middleware('auth');
+
+// Rutas de Controlados y Caja
+Route::get('/superadmin/controlados', [App\Http\Controllers\ControladosController::class, 'index'])->name('superadmin.controlados')->middleware('auth');
+Route::post('/superadmin/controlados/{id}/aprobar', [App\Http\Controllers\ControladosController::class, 'aprobar'])->name('superadmin.controlados.aprobar')->middleware('auth');
+Route::post('/superadmin/controlados/{id}/rechazar', [App\Http\Controllers\ControladosController::class, 'rechazar'])->name('superadmin.controlados.rechazar')->middleware('auth');
+
+Route::get('/superadmin/caja', [App\Http\Controllers\CajaController::class, 'index'])->name('caja.index')->middleware('auth');
+Route::get('/superadmin/caja/{id}', [App\Http\Controllers\CajaController::class, 'show'])->name('caja.show')->middleware('auth');
+Route::post('/superadmin/caja/{id}/cobrar', [App\Http\Controllers\CajaController::class, 'cobrar'])->name('caja.cobrar')->middleware('auth');
+
+// Rutas de Quirófano
+Route::get('/superadmin/quirofano', [App\Http\Controllers\QuirofanoController::class, 'index'])->name('quirofano.index')->middleware('auth');
+Route::post('/superadmin/quirofano/cargar', [App\Http\Controllers\QuirofanoController::class, 'cargar'])->name('quirofano.cargar')->middleware('auth');
+    Route::get('/enfermeria/triage', [NurseController::class, 'triage'])->name('enfermeria.triage');
+    Route::post('/enfermeria/triage/validar/{id}', [NurseController::class, 'validarIA'])->name('enfermeria.triage.validar');
+    Route::post('/enfermeria/triage/registrar', [NurseController::class, 'storeUrgencia'])->name('enfermeria.triage.store');
