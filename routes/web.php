@@ -125,6 +125,7 @@ Route::middleware(['auth', 'verified', 'role:Médico A,Médico B,Médico C,Espec
     Route::get('/quirofano', [DoctorController::class, 'quirofano'])->name('quirofano');
     Route::get('/controlados', [DoctorController::class, 'controlados'])->name('controlados');
     Route::get('/ia-medica', [DoctorController::class, 'iaMedica'])->name('iaMedica');
+    Route::post('/ia-medica/predecir', [DoctorController::class, 'iaMedicaPredecir'])->name('iaMedica.predecir');
     Route::get('/ambulancias-medico', [DoctorController::class, 'ambulancias'])->name('ambulancias');
     Route::get('/hospital-live-medico', [DoctorController::class, 'hospitalLive'])->name('hospitalLive');
     Route::get('/asistente-ia-medico', [DoctorController::class, 'asistenteIA'])->name('asistenteIA');

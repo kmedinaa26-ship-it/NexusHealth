@@ -69,6 +69,7 @@
 .sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
 .sec-head h2{font-size:.95rem;font-weight:800;color:var(--txt);display:flex;align-items:center;gap:.4rem}
 .modelos-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem;margin-bottom:1.2rem}
+.mc.regresion-card{grid-column:1/-1;max-width:720px;margin:0 auto;width:100%}
 
 /* ── CARD MODELO ────────────────────────────────────────────────────────── */
 .mc{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);
@@ -342,7 +343,7 @@
 @foreach($resultados['modelos'] as $m)
 @php $esMejor = isset($resultados['mejor_modelo']) && $resultados['mejor_modelo'] === $m['nombre']; @endphp
 
-<div class="mc">
+<div class="mc {{ $m['tipo']=='regresion'?'regresion-card':'' }}">
   <div class="mc-stripe" style="background:{{ $m['color'] }}"></div>
 
   @if($esMejor)
@@ -687,6 +688,281 @@
 </div>{{-- mc --}}
 @endforeach
 </div>{{-- modelos-grid --}}
+
+
+{{-- ═══ PREDICTOR INTERACTIVO ════════════════════════════════════════════ --}}
+<div style="background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:1.2rem;overflow:hidden">
+  <div style="padding:.8rem 1.2rem;background:linear-gradient(135deg,#1C1917,#292524);display:flex;align-items:center;gap:.5rem">
+    <i class="fas fa-flask" style="color:#F97316"></i>
+    <h2 style="font-size:.88rem;font-weight:800;color:#fff;margin:0">Predictor en Tiempo Real</h2>
+    <span style="font-size:.7rem;color:#A8A29E;margin-left:.3rem">Ingresa los signos vitales y obtén la predicción de los 4 modelos</span>
+  </div>
+  <div style="padding:1.2rem">
+
+    {{-- INPUTS --}}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.8rem;margin-bottom:1rem">
+      <div>
+        <label style="font-size:.7rem;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:.3rem">
+          <i class="fas fa-heartbeat" style="color:#DC2626;margin-right:.2rem"></i> FC (lpm)
+        </label>
+        <input type="number" id="p-fc" value="105" min="40" max="200"
+          style="width:100%;padding:.5rem .7rem;border:2px solid var(--border);border-radius:8px;font-size:.9rem;font-weight:700;color:var(--txt);background:#F9F8F6;transition:border .2s"
+          onfocus="this.style.borderColor='#DC2626'" onblur="this.style.borderColor='var(--border)'">
+        <div style="font-size:.62rem;color:var(--muted);margin-top:.2rem">Normal: 60-100 lpm</div>
+      </div>
+      <div>
+        <label style="font-size:.7rem;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:.3rem">
+          <i class="fas fa-lungs" style="color:#6366F1;margin-right:.2rem"></i> SpO2 (%)
+        </label>
+        <input type="number" id="p-spo2" value="94" min="70" max="100"
+          style="width:100%;padding:.5rem .7rem;border:2px solid var(--border);border-radius:8px;font-size:.9rem;font-weight:700;color:var(--txt);background:#F9F8F6;transition:border .2s"
+          onfocus="this.style.borderColor='#6366F1'" onblur="this.style.borderColor='var(--border)'">
+        <div style="font-size:.62rem;color:var(--muted);margin-top:.2rem">Normal: 95-100%</div>
+      </div>
+      <div>
+        <label style="font-size:.7rem;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:.3rem">
+          <i class="fas fa-thermometer-half" style="color:#F59E0B;margin-right:.2rem"></i> Temp (°C)
+        </label>
+        <input type="number" id="p-temp" value="37" min="35" max="42" step="0.1"
+          style="width:100%;padding:.5rem .7rem;border:2px solid var(--border);border-radius:8px;font-size:.9rem;font-weight:700;color:var(--txt);background:#F9F8F6;transition:border .2s"
+          onfocus="this.style.borderColor='#F59E0B'" onblur="this.style.borderColor='var(--border)'">
+        <div style="font-size:.62rem;color:var(--muted);margin-top:.2rem">Normal: 36-37.5°C</div>
+      </div>
+      <div>
+        <label style="font-size:.7rem;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:.3rem">
+          <i class="fas fa-user" style="color:#10B981;margin-right:.2rem"></i> Edad (años)
+        </label>
+        <input type="number" id="p-edad" value="40" min="1" max="120"
+          style="width:100%;padding:.5rem .7rem;border:2px solid var(--border);border-radius:8px;font-size:.9rem;font-weight:700;color:var(--txt);background:#F9F8F6;transition:border .2s"
+          onfocus="this.style.borderColor='#10B981'" onblur="this.style.borderColor='var(--border)'">
+        <div style="font-size:.62rem;color:var(--muted);margin-top:.2rem">Rango: 1-120</div>
+      </div>
+    </div>
+
+    {{-- SLIDERS VISUALES --}}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.5rem;margin-bottom:1rem">
+      <div>
+        <input type="range" id="s-fc" min="40" max="200" value="105"
+          style="width:100%;accent-color:#DC2626" oninput="document.getElementById('p-fc').value=this.value;predecir()">
+      </div>
+      <div>
+        <input type="range" id="s-spo2" min="70" max="100" value="94"
+          style="width:100%;accent-color:#6366F1" oninput="document.getElementById('p-spo2').value=this.value;predecir()">
+      </div>
+      <div>
+        <input type="range" id="s-temp" min="350" max="420" value="370"
+          style="width:100%;accent-color:#F59E0B" oninput="document.getElementById('p-temp').value=(this.value/10).toFixed(1);predecir()">
+      </div>
+      <div>
+        <input type="range" id="s-edad" min="1" max="120" value="40"
+          style="width:100%;accent-color:#10B981" oninput="document.getElementById('p-edad').value=this.value;predecir()">
+      </div>
+    </div>
+
+    <button onclick="predecir()"
+      style="background:linear-gradient(135deg,#DC2626,#EA580C);color:#fff;border:none;padding:.6rem 1.4rem;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:.4rem;margin-bottom:1rem;transition:opacity .2s"
+      onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+      <i class="fas fa-brain"></i> Predecir con los 4 modelos
+    </button>
+
+    {{-- RESULTADOS --}}
+    <div id="pred-resultado" style="display:none">
+      <div style="font-size:.7rem;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.4px;margin-bottom:.6rem">
+        <i class="fas fa-poll" style="margin-right:.2rem"></i> Resultados de prediccion
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.6rem;margin-bottom:.8rem">
+
+        {{-- Logistica --}}
+        <div id="res-logistica" style="border-radius:10px;padding:.8rem;border:2px solid var(--border)">
+          <div style="font-size:.68rem;font-weight:700;color:#6366F1;text-transform:uppercase;margin-bottom:.4rem">
+            <i class="fas fa-chart-line"></i> Reg. Logistica
+          </div>
+          <div id="rl-prob" style="font-size:1.8rem;font-weight:800;color:var(--txt)">--</div>
+          <div style="font-size:.68rem;color:var(--sub)">Probabilidad critico</div>
+          <div id="rl-clase" style="margin-top:.3rem;font-size:.72rem;font-weight:700;padding:.2rem .5rem;border-radius:6px;display:inline-block">--</div>
+          <div id="rl-z" style="margin-top:.3rem;font-family:monospace;font-size:.65rem;color:var(--muted)">z = --</div>
+          <div style="margin-top:.4rem;height:8px;background:#F3F2F1;border-radius:4px;overflow:hidden">
+            <div id="rl-bar" style="height:100%;border-radius:4px;background:#6366F1;width:0%;transition:width .6s ease"></div>
+          </div>
+        </div>
+
+        {{-- SVM --}}
+        <div id="res-svm" style="border-radius:10px;padding:.8rem;border:2px solid var(--border)">
+          <div style="font-size:.68rem;font-weight:700;color:#EF4444;text-transform:uppercase;margin-bottom:.4rem">
+            <i class="fas fa-bullseye"></i> SVM
+          </div>
+          <div id="svm-dec" style="font-size:1.8rem;font-weight:800;color:var(--txt)">--</div>
+          <div style="font-size:.68rem;color:var(--sub)">Valor decision (w·x + b)</div>
+          <div id="svm-clase" style="margin-top:.3rem;font-size:.72rem;font-weight:700;padding:.2rem .5rem;border-radius:6px;display:inline-block">--</div>
+          <div style="font-size:.62rem;color:var(--muted);margin-top:.3rem">d > 0 = Alto riesgo | d ≤ 0 = Bajo riesgo</div>
+        </div>
+
+        {{-- Arbol --}}
+        <div id="res-arbol" style="border-radius:10px;padding:.8rem;border:2px solid var(--border)">
+          <div style="font-size:.68rem;font-weight:700;color:#10B981;text-transform:uppercase;margin-bottom:.4rem">
+            <i class="fas fa-sitemap"></i> Arbol de Decision
+          </div>
+          <div id="arbol-hoja" style="font-size:1.1rem;font-weight:800;color:var(--txt);margin:.3rem 0">--</div>
+          <div style="font-size:.68rem;color:var(--sub)">Hoja de clasificacion</div>
+          <div style="font-size:.65rem;color:var(--muted);margin-top:.4rem;font-family:monospace">
+            SpO2&lt;90 → UCI | FC&gt;120 → Obs.<br>Temp&gt;38 → Febril | else → Estable
+          </div>
+        </div>
+
+        {{-- RF --}}
+        <div id="res-rf" style="border-radius:10px;padding:.8rem;border:2px solid var(--border)">
+          <div style="font-size:.68rem;font-weight:700;color:#F59E0B;text-transform:uppercase;margin-bottom:.4rem">
+            <i class="fas fa-tree"></i> Random Forest
+          </div>
+          <div id="rf-votos" style="font-size:1.8rem;font-weight:800;color:var(--txt)">--</div>
+          <div style="font-size:.68rem;color:var(--sub)">Votos de 3 arboles</div>
+          <div id="rf-clase" style="margin-top:.3rem;font-size:.72rem;font-weight:700;padding:.2rem .5rem;border-radius:6px;display:inline-block">--</div>
+          <div style="font-size:.62rem;color:var(--muted);margin-top:.3rem">Mayoria ≥ 2 votos → Critico</div>
+        </div>
+
+      </div>
+
+      {{-- SpO2 predicho --}}
+      <div style="background:#F5F3FF;border:1px solid #DDD6FE;border-radius:10px;padding:.8rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+        <i class="fas fa-chart-bar" style="color:#8B5CF6;font-size:1.2rem"></i>
+        <div>
+          <div style="font-size:.68rem;font-weight:700;color:#5B21B6;text-transform:uppercase">Reg. Lineal Multiple — SpO2 Predicho</div>
+          <div style="font-size:.7rem;color:#6D28D9;font-family:monospace;margin-top:.1rem">y = 112.42 - 0.21·FC - 0.15·(Temp-37) - 0.05·(Edad-40)</div>
+        </div>
+        <div style="margin-left:auto;text-align:center">
+          <div id="spo2-pred" style="font-size:1.8rem;font-weight:800;color:#7C3AED">--</div>
+          <div style="font-size:.65rem;color:#5B21B6;font-weight:700">% SpO2 estimado</div>
+        </div>
+      </div>
+
+      {{-- VEREDICTO FINAL --}}
+      <div id="veredicto" style="margin-top:.8rem;border-radius:10px;padding:.9rem 1.1rem;display:flex;align-items:center;gap:.8rem">
+        <i id="veredicto-icon" class="fas fa-circle-notch fa-spin" style="font-size:1.4rem"></i>
+        <div>
+          <div id="veredicto-titulo" style="font-size:.85rem;font-weight:800">Calculando...</div>
+          <div id="veredicto-sub" style="font-size:.72rem;margin-top:.1rem">--</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
+const PREDECIR_URL = "{{ route('medico.iaMedica.predecir') }}";
+
+function predecir() {
+    const fc   = parseFloat(document.getElementById('p-fc').value)   || 80;
+    const spo2 = parseFloat(document.getElementById('p-spo2').value) || 98;
+    const temp = parseFloat(document.getElementById('p-temp').value) || 37;
+    const edad = parseInt(document.getElementById('p-edad').value)   || 40;
+
+    // Sincronizar sliders
+    document.getElementById('s-fc').value   = fc;
+    document.getElementById('s-spo2').value = spo2;
+    document.getElementById('s-temp').value = Math.round(temp * 10);
+    document.getElementById('s-edad').value = edad;
+
+    fetch(PREDECIR_URL, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json','X-CSRF-TOKEN': CSRF},
+        body: JSON.stringify({fc, spo2, temp, edad})
+    })
+    .then(r => r.json())
+    .then(d => renderResultado(d))
+    .catch(() => {
+        // Calculo local si falla el fetch
+        const z    = -15.0 + (0.15 * fc) + (-0.04 * spo2);
+        const prob = Math.round(1 / (1 + Math.exp(-z)) * 1000) / 10;
+        renderResultado({
+            logistica: {prob, z: Math.round(z*1000)/1000, critico: prob>=50, clase: prob>=50?'CRITICO':'NO CRITICO'},
+            svm: {decision: Math.round((0.6*fc - 0.8*spo2 + 30)*100)/100, clase: (0.6*fc - 0.8*spo2 + 30)>0?'ALTO RIESGO':'BAJO RIESGO'},
+            arbol: spo2<90?'UCI Inmediata':fc>120?'Observacion':temp>38?'Control Febril':'Estable',
+            rf: {votos: (spo2<90||fc>120||temp>38?1:0)+(spo2<92||fc>110||temp>38.5?1:0)+(spo2<88||fc>130||temp>39?1:0), clase: ((spo2<90||fc>120||temp>38?1:0)+(spo2<92||fc>110||temp>38.5?1:0)+(spo2<88||fc>130||temp>39?1:0))>=2?'Critico':'No critico'},
+            spo2_pred: Math.round((112.42 - 0.21*fc - 0.15*(temp-37) - 0.05*(edad-40))*10)/10
+        });
+    });
+}
+
+function renderResultado(d) {
+    document.getElementById('pred-resultado').style.display = 'block';
+
+    // Logistica
+    const prob = d.logistica.prob;
+    const critico = d.logistica.critico;
+    document.getElementById('rl-prob').textContent = prob + '%';
+    document.getElementById('rl-z').textContent    = 'z = ' + d.logistica.z;
+    document.getElementById('rl-bar').style.width  = prob + '%';
+    document.getElementById('rl-bar').style.background = critico ? '#DC2626' : '#10B981';
+    const rlClase = document.getElementById('rl-clase');
+    rlClase.textContent = d.logistica.clase;
+    rlClase.style.background = critico ? '#FEE2E2' : '#DCFCE7';
+    rlClase.style.color       = critico ? '#DC2626' : '#16A34A';
+    document.getElementById('res-logistica').style.borderColor = critico ? '#DC2626' : '#10B981';
+
+    // SVM
+    const svmAlto = d.svm.clase === 'ALTO RIESGO';
+    document.getElementById('svm-dec').textContent  = d.svm.decision;
+    const svmClase = document.getElementById('svm-clase');
+    svmClase.textContent        = d.svm.clase;
+    svmClase.style.background   = svmAlto ? '#FEE2E2' : '#DCFCE7';
+    svmClase.style.color        = svmAlto ? '#DC2626' : '#16A34A';
+    document.getElementById('res-svm').style.borderColor = svmAlto ? '#DC2626' : '#10B981';
+
+    // Arbol
+    const hojasColor = {
+        'UCI Inmediata': {bg:'#FEE2E2',c:'#DC2626'},
+        'Observacion':   {bg:'#FFEDD5',c:'#EA580C'},
+        'Control Febril':{bg:'#FEF9C3',c:'#CA8A04'},
+        'Estable':       {bg:'#DCFCE7',c:'#16A34A'},
+    };
+    const hc = hojasColor[d.arbol] || {bg:'#F3F2F1',c:'#57534E'};
+    const arbolEl = document.getElementById('arbol-hoja');
+    arbolEl.textContent       = d.arbol;
+    arbolEl.style.color       = hc.c;
+    document.getElementById('res-arbol').style.borderColor = hc.c;
+
+    // RF
+    const rfCritico = d.rf.clase === 'Critico';
+    document.getElementById('rf-votos').textContent = d.rf.votos + '/3 votos';
+    const rfClase = document.getElementById('rf-clase');
+    rfClase.textContent      = d.rf.clase;
+    rfClase.style.background = rfCritico ? '#FEE2E2' : '#DCFCE7';
+    rfClase.style.color      = rfCritico ? '#DC2626' : '#16A34A';
+    document.getElementById('res-rf').style.borderColor = rfCritico ? '#DC2626' : '#10B981';
+
+    // SpO2 pred
+    document.getElementById('spo2-pred').textContent = d.spo2_pred + '%';
+
+    // Veredicto
+    const modelosCriticos = [critico, svmAlto, d.arbol !== 'Estable', rfCritico].filter(Boolean).length;
+    const vEl    = document.getElementById('veredicto');
+    const vIcon  = document.getElementById('veredicto-icon');
+    const vTit   = document.getElementById('veredicto-titulo');
+    const vSub   = document.getElementById('veredicto-sub');
+    vIcon.className = 'fas ' + (modelosCriticos >= 3 ? 'fa-exclamation-triangle' : modelosCriticos >= 2 ? 'fa-exclamation-circle' : 'fa-check-circle');
+    if (modelosCriticos >= 3) {
+        vEl.style.background  = '#FEE2E2'; vEl.style.border = '2px solid #FECACA';
+        vIcon.style.color     = '#DC2626';
+        vTit.style.color      = '#DC2626'; vTit.textContent = 'PACIENTE EN RIESGO CRITICO';
+        vSub.style.color      = '#B91C1C'; vSub.textContent = modelosCriticos + '/4 modelos coinciden — Atencion inmediata recomendada';
+    } else if (modelosCriticos >= 2) {
+        vEl.style.background  = '#FFEDD5'; vEl.style.border = '2px solid #FED7AA';
+        vIcon.style.color     = '#EA580C';
+        vTit.style.color      = '#EA580C'; vTit.textContent = 'RIESGO MODERADO — Observacion requerida';
+        vSub.style.color      = '#C2410C'; vSub.textContent = modelosCriticos + '/4 modelos indican riesgo';
+    } else {
+        vEl.style.background  = '#DCFCE7'; vEl.style.border = '2px solid #BBF7D0';
+        vIcon.style.color     = '#16A34A';
+        vTit.style.color      = '#16A34A'; vTit.textContent = 'PACIENTE ESTABLE';
+        vSub.style.color      = '#15803D'; vSub.textContent = modelosCriticos + '/4 modelos indican riesgo — Control rutinario';
+    }
+}
+
+// Predecir al cargar
+document.addEventListener('DOMContentLoaded', () => setTimeout(predecir, 300));
+</script>
 
 </div>{{-- ia-wrap --}}
 @endsection

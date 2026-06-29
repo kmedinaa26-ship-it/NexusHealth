@@ -71,13 +71,13 @@ class IAMedicaService
 
     public function modelo1_RegresionLogistica(array $train, array $test): array
     {
-        $b0 = -8.0; $b1 = 0.05; $b2 = -0.1; $b3 = 0.02;
+        $b0 = -15.0; $b1 = 0.15; $b2 = -0.04; $b3 = 0.0;
 
         $predicciones = [];
         $reales       = [];
 
         foreach ($test as $p) {
-            $z              = $b0 + ($b1 * $p['edad']) + ($b2 * $p['spo2']) + ($b3 * $p['fc']);
+            $z              = $b0 + ($b1 * $p['fc']) + ($b2 * $p['spo2']);
             $prob           = round(1 / (1 + exp(-$z)), 4);
             $predicciones[] = $prob >= 0.5 ? 1 : 0;
             $reales[]       = $p['critico'];
@@ -91,8 +91,8 @@ class IAMedicaService
             'color'        => '#6366F1',
             'descripcion'  => 'Predice probabilidad de triage critico usando funcion Sigmoide.',
             'formula'      => 'P(critico) = 1 / (1 + e^-z)',
-            'z_formula'    => 'z = -8.0 + 0.05*Edad - 0.1*SpO2 + 0.02*FC',
-            'coeficientes' => ['B0' => $b0, 'B1 Edad' => $b1, 'B2 SpO2' => $b2, 'B3 FC' => $b3],
+            'z_formula'    => 'z = -15.0 + 0.15*FC - 0.04*SpO2',
+            'coeficientes' => ['B0' => $b0, 'B1 FC' => $b1, 'B2 SpO2' => $b2],
             'tipo'         => 'clasificacion',
             'matriz'       => $matriz,
             'accuracy'     => $this->metrics->accuracy($matriz),
@@ -256,19 +256,28 @@ class IAMedicaService
 
     public function modelo5_RegresionLineal(array $train, array $test): array
     {
-        $xTrain = array_column($train, 'fc');
-        $yTrain = array_column($train, 'spo2');
-
-        $resultado = $this->regression->linearRegression($xTrain, $yTrain);
-        $m         = $resultado['pendiente'];
-        $b         = $resultado['intercepto'];
+        // Regresion multiple: calcular coeficientes manualmente (OLS simplificado)
+        // Y = b0 + b1*FC + b2*Temp + b3*Edad
+        $n = count($train);
+        $sumFC=$sumT=$sumE=$sumY=$sumFC2=$sumT2=$sumE2=$sumFCY=$sumTY=$sumEY=0;
+        foreach($train as $p){
+            $sumFC+=$p['fc']; $sumT+=$p['temp']; $sumE+=$p['edad']; $sumY+=$p['spo2'];
+            $sumFC2+=$p['fc']*$p['fc']; $sumT2+=$p['temp']*$p['temp']; $sumE2+=$p['edad']*$p['edad'];
+            $sumFCY+=$p['fc']*$p['spo2']; $sumTY+=$p['temp']*$p['spo2']; $sumEY+=$p['edad']*$p['spo2'];
+        }
+        $mFC  = $sumFC/$n; $mT=$sumT/$n; $mE=$sumE/$n; $mY=$sumY/$n;
+        $b1   = $sumFC2-$n*$mFC*$mFC > 0 ? round(($sumFCY-$n*$mFC*$mY)/($sumFC2-$n*$mFC*$mFC),4) : -0.21;
+        $b2   = $sumT2-$n*$mT*$mT   > 0 ? round(($sumTY-$n*$mT*$mY)/($sumT2-$n*$mT*$mT),4)    : -0.15;
+        $b3   = $sumE2-$n*$mE*$mE   > 0 ? round(($sumEY-$n*$mE*$mY)/($sumE2-$n*$mE*$mE),4)    : -0.05;
+        $b0   = round($mY - $b1*$mFC - $b2*$mT - $b3*$mE, 4);
+        $m    = $b1; $b = $b0;
 
         $realesArr = [];
         $predArr   = [];
         $tabla     = [];
 
         foreach ($test as $p) {
-            $pred        = round(($m * $p['fc']) + $b, 1);
+            $pred        = round($b0 + ($b1*$p['fc']) + ($b2*$p['temp']) + ($b3*$p['edad']), 1);
             $realesArr[] = $p['spo2'];
             $predArr[]   = $pred;
             $tabla[]     = [
@@ -295,10 +304,10 @@ class IAMedicaService
             'color'          => '#8B5CF6',
             'descripcion'    => 'Predice SpO2 esperado en funcion de la FC del paciente.',
             'tipo'           => 'regresion',
-            'formula'        => "y = {$m}x + {$b}",
-            'pendiente'      => $m,
-            'intercepto'     => $b,
-            'interpretacion' => "Por cada latido mas de FC el SpO2 cambia {$m}%",
+            'formula'        => "y = {$b0} + {$b1}*FC + {$b2}*Temp + {$b3}*Edad",
+            'pendiente'      => $b1,
+            'intercepto'     => $b0,
+            'interpretacion' => "Reg. Multiple: FC, Temp y Edad predicen SpO2. b1(FC)={$b1} b2(Temp)={$b2} b3(Edad)={$b3}",
             'mse'            => $mse,
             'rmse'           => $rmse,
             'mae'            => $mae,

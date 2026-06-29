@@ -666,6 +666,44 @@ class DoctorController extends Controller
         return view('medico.ia-medica', compact('resultados'));
     }
 
+    
+    public function iaMedicaPredecir(\Illuminate\Http\Request $request)
+    {
+        $fc   = (float)$request->input('fc', 80);
+        $spo2 = (float)$request->input('spo2', 98);
+        $temp = (float)$request->input('temp', 37);
+        $edad = (int)$request->input('edad', 40);
+
+        $z    = -15.0 + (0.15 * $fc) + (-0.04 * $spo2);
+        $prob = round(1 / (1 + exp(-$z)) * 100, 1);
+        $critico = $prob >= 50;
+
+        $svm_dec   = round((0.6 * $fc) + (-0.8 * $spo2) + 30, 2);
+        $svm_clase = $svm_dec > 0 ? 'ALTO RIESGO' : 'BAJO RIESGO';
+
+        if ($spo2 < 90)       $arbol = 'UCI Inmediata';
+        elseif ($fc > 120)    $arbol = 'Observacion';
+        elseif ($temp > 38)   $arbol = 'Control Febril';
+        else                  $arbol = 'Estable';
+
+        $v1 = ($spo2 < 90  || $fc > 120 || $temp > 38.0) ? 1 : 0;
+        $v2 = ($spo2 < 92  || $fc > 110 || $temp > 38.5) ? 1 : 0;
+        $v3 = ($spo2 < 88  || $fc > 130 || $temp > 39.0) ? 1 : 0;
+        $votos = $v1 + $v2 + $v3;
+        $rf_clase = $votos >= 2 ? 'Critico' : 'No critico';
+
+        $spo2_pred = round(112.42 + (-0.21 * $fc) + (-0.15 * ($temp - 37)) + (-0.05 * ($edad - 40)), 1);
+
+        return response()->json([
+            'logistica'  => ['prob' => $prob, 'z' => round($z, 3), 'critico' => $critico, 'clase' => $critico ? 'CRITICO' : 'NO CRITICO'],
+            'svm'        => ['decision' => $svm_dec, 'clase' => $svm_clase],
+            'arbol'      => $arbol,
+            'rf'         => ['votos' => $votos, 'clase' => $rf_clase],
+            'spo2_pred'  => $spo2_pred,
+            'input'      => compact('fc', 'spo2', 'temp', 'edad'),
+        ]);
+    }
+
     public function derivaciones()
     {
         $role = session('doctor_profile');
