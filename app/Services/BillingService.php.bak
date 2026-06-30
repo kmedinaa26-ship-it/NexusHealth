@@ -5,8 +5,6 @@ namespace App\Services;
 use App\Models\PatientAccount;
 use App\Models\AccountItem;
 use App\Models\Payment;
-use App\Models\Invoice;
-use App\Models\MlFeed;
 
 class BillingService
 {
@@ -42,12 +40,6 @@ class BillingService
         ]);
 
         $this->recalculateAccountTotal($accountId);
-
-        $map1 = ['farmacia'=>"Medicamentos","quirofano"=>"Cirugia","medico"=>"Consulta Urgencias","enfermeria"=>"UCI"];
-        $c1 = $map1[$data['source_module'] ?? 'sistema'] ?? 'Consulta Urgencias';
-        Invoice::create(['patient_name' => $account->patient->name ?? 'Paciente','concept' => $c1,'amount' => $lineTotal,'status' => 'Pendiente']);
-        MlFeed::create(['patient_name' => $account->patient->name ?? 'Paciente','concept' => $c1,'amount' => $lineTotal,'source_module' => $data['source_module'] ?? 'sistema','source_detail' => ($data['type'] ?? '') . ': ' . ($data['concept'] ?? '')]);
-
         return $item;
     }
 
@@ -86,8 +78,6 @@ class BillingService
                 'source_module' => 'farmacia',
                 'dispensed_by' => $cashierId,
             ]);
-            Invoice::create(['patient_name' => 'Venta Directa POS','concept' => 'Medicamentos','amount' => $itemData['line_total'],'status' => 'Pagado']);
-            MlFeed::create(['patient_name' => 'Venta Directa POS','concept' => 'Medicamentos','amount' => $itemData['line_total'],'source_module' => 'farmacia','source_detail' => 'Venta directa POS']);
         }
 
         return $payment;

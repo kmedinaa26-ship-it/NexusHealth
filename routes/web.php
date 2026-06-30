@@ -233,6 +233,10 @@ Route::middleware(['auth', 'verified', 'role:Farmacéutico,Admin Farmacia'])->pr
 // SUPERADMIN
 // ==========================================
 Route::middleware(['auth', 'verified', 'role:SuperAdmin,Administrador Hospitalario'])->prefix('superadmin')->name('superadmin.')->group(function () {
+    Route::get('/ml-dashboard', [App\Http\Controllers\MLDashboardController::class, 'index'])->name('mlDashboard');
+    Route::post('/ml-dashboard/upload', [App\Http\Controllers\MLDashboardController::class, 'uploadData'])->name('mlDashboard.upload');
+    Route::get('/ml-dashboard/generate-demo', [App\Http\Controllers\MLDashboardController::class, 'generateDemo'])->name('mlDashboard.generateDemo');
+    Route::get('/ml-dashboard/template', [App\Http\Controllers\MLDashboardController::class, 'downloadTemplate'])->name('mlDashboard.template');
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/personal', [SuperAdminController::class, 'personal'])->name('personal');
     Route::post('/personal', [SuperAdminController::class, 'storeUser'])->name('storeUser');
@@ -340,9 +344,7 @@ Route::middleware(['auth', 'verified', 'role:SuperAdmin,Administrador'])->group(
 });
 Route::get("/superadmin/bigdata/export-csv", [App\Http\Controllers\BigDataController::class, "exportCSV"])->name("superadmin.bigdata.csv");
 
-// Ruta temporal Dashboard ML
-
-Route::get('/ml-dashboard', [App\Http\Controllers\MLDashboardController::class, 'index'])->middleware('auth');
+// ML Dashboard — dentro del grupo superadmin se agrega abajo
 
 
 // Rutas Farmacia POS
