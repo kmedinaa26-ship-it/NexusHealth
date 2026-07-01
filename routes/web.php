@@ -367,3 +367,7 @@ Route::post('/superadmin/quirofano/cargar', [App\Http\Controllers\QuirofanoContr
     Route::get('/enfermeria/triage', [NurseController::class, 'triage'])->name('enfermeria.triage');
     Route::post('/enfermeria/triage/validar/{id}', [NurseController::class, 'validarIA'])->name('enfermeria.triage.validar');
     Route::post('/enfermeria/triage/registrar', [NurseController::class, 'storeUrgencia'])->name('enfermeria.triage.store');
+
+// Rutas del nuevo modulo Predictivo y Finanzas
+require __DIR__.'/predictivo-finanzas.php';
+

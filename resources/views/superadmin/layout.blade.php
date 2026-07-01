@@ -40,6 +40,19 @@
             <a href="{{ route('superadmin.personal') }}" class="menu-item @yield('nav-personal')"><i class="fas fa-user-md"></i> Personal</a>
             <a href="{{ route('superadmin.scoreRiesgo') }}" class="menu-item @yield('nav-score')"><i class="fas fa-user-tag"></i> Score Riesgo</a>
             <a href="{{ route('superadmin.roles') }}" class="menu-item @yield('nav-roles')"><i class="fas fa-key"></i> Roles</a>
+            <div class="menu-category" style="color:#7C3AED">🧠 ML - Machine Learning</div>
+            <a href="{{ url('/superadmin/ml/modelos') }}" class="menu-item @yield('nav-ml-modelos')"><i class="fas fa-sitemap"></i> Modelos</a>
+            <a href="{{ url('/superadmin/ml/dataset') }}" class="menu-item @yield('nav-ml-dataset')"><i class="fas fa-database"></i> Dataset</a>
+            <a href="{{ url('/superadmin/ml/evaluar') }}" class="menu-item @yield('nav-ml-evaluar')"><i class="fas fa-chart-pie"></i> Evaluar (Matriz)</a>
+            <a href="{{ url('/superadmin/ml/explicacion') }}" class="menu-item @yield('nav-ml-explicacion')"><i class="fas fa-search-plus"></i> Explicabilidad</a>
+            <a href="{{ url('/superadmin/ml/drift') }}" class="menu-item @yield('nav-ml-drift')"><i class="fas fa-chart-line"></i> Drift del Modelo</a>
+            <a href="{{ url('/superadmin/ml/retrain') }}" class="menu-item @yield('nav-ml-retrain')"><i class="fas fa-redo"></i> Re-entrenar</a>
+            <div class="menu-category" style="color:#059669">💰 Finanzas ML</div>
+            <a href="{{ url('/superadmin/finanzas/costos') }}" class="menu-item @yield('nav-fin-costos')"><i class="fas fa-file-invoice-dollar"></i> Costos</a>
+            <a href="{{ url('/superadmin/finanzas/cobros') }}" class="menu-item @yield('nav-fin-cobros')"><i class="fas fa-hand-holding-usd"></i> Cobros</a>
+            <a href="{{ url('/superadmin/finanzas/utilidad') }}" class="menu-item @yield('nav-fin-utilidad')"><i class="fas fa-balance-scale"></i> Utilidad</a>
+            <a href="{{ url('/superadmin/finanzas/incobrables') }}" class="menu-item @yield('nav-fin-incobrables')"><i class="fas fa-ban"></i> Incobrables</a>
+            <a href="{{ url('/superadmin/alertas-ml') }}" class="menu-item @yield('nav-alertas-ml')"><i class="fas fa-exclamation-triangle"></i> Alertas ML</a>
 
             <div class="menu-category">Operacion Hospitalaria</div>
             <a href="{{ route('superadmin.pacientes') }}" class="menu-item @yield('nav-pacientes')"><i class="fas fa-procedures"></i> Pacientes</a>
