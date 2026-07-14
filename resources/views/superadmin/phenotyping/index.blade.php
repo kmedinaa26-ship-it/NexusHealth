@@ -194,13 +194,15 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
 const C=['#DC2626','#059669','#F59E0B','#3B82F6','#7C3AED','#EC4899'];
 const CB=['rgba(220,38,38,0.15)','rgba(5,150,105,0.15)','rgba(245,158,11,0.15)','rgba(59,130,246,0.15)','rgba(124,58,237,0.15)','rgba(236,72,153,0.15)'];
 const VN=['Edad','Severidad','Horas Est.','Var. FC','Var. Temp','Medicamentos','Monitoreo','Carga Diag.'];
 let ch={};
 function switchPhTab(t){
-    document.querySelectorAll('.ph-tab').forEach(e=>e.classList.remove('active'));
-    document.querySelectorAll('.ph-tab-panel').forEach(e=>e.classList.remove('active'));
+    document.querySelectorAll('.ph-tab').forEach(function(e){e.classList.remove('active');});
+    document.querySelectorAll('.ph-tab-panel').forEach(function(e){e.classList.remove('active');});
     document.getElementById('ph-tab-'+t).classList.add('active');
     event.target.closest('.ph-tab').classList.add('active');
 }
@@ -208,10 +210,17 @@ function dc(id){if(ch[id]){ch[id].destroy();delete ch[id];}}
 function tBadge(l){return 'badge-'+(l||'verde');}
 
 async function runKm(){
-    const k=document.getElementById('k-value').value,btn=document.getElementById('btn-km'),ld=document.getElementById('km-load');
+    var k=document.getElementById('k-value').value;
+    var btn=document.getElementById('btn-km');
+    var ld=document.getElementById('km-load');
     btn.disabled=true;ld.classList.add('show');
-    try{const r=await fetch('/superadmin/phenotyping/kmeans?k='+k);const d=await r.json();if(d.error){alert(d.error);return;}renderKM(d);}
-    catch(e){alert('Error: '+e.message);}finally{btn.disabled=false;ld.classList.remove('show');}
+    try{
+        var r=await fetch('/superadmin/phenotyping/kmeans?k='+k);
+        var d=await r.json();
+        if(d.error){alert(d.error);return;}
+        renderKM(d);
+    }catch(e){alert('Error: '+e.message);}
+    finally{btn.disabled=false;ld.classList.remove('show');}
 }
 
 function renderKM(d){
@@ -219,54 +228,150 @@ function renderKM(d){
     document.getElementById('km-sil').textContent=d.silhouette;
     document.getElementById('km-ine').textContent=d.inertia.toLocaleString();
     document.getElementById('km-iter').textContent=d.n_iter;
-    dc('elbow');ch.elbow=new Chart(document.getElementById('ch-elbow'),{type:'line',data:{labels:d.elbow.map(e=>'K='+e.k),datasets:[{data:d.elbow.map(e=>e.inertia),borderColor:'#7C3AED',backgroundColor:'rgba(124,58,237,0.08)',fill:true,tension:0.4,pointRadius:6,pointBackgroundColor:'#7C3AED',borderWidth:2.5}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{grid:{color:'#FED7AA'},ticks:{color:'#78716C',font:{weight:'bold'}}},x:{grid:{display:false},ticks:{color:'#78716C',font:{weight:'bold'}}}}}});
-    dc('sil');ch.sil=new Chart(document.getElementById('ch-sil'),{type:'bar',data:{labels:d.elbow.map(e=>'K='+e.k),datasets:[{data:d.elbow.map(e=>e.silhouette),backgroundColor:d.elbow.map(e=>e.silhouette>0.5?'#059669':(e.silhouette>0.25?'#F59E0B':'#DC2626')),borderRadius:8,borderSkipped:false}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:-0.1,max:1,grid:{color:'#FED7AA'},ticks:{color:'#78716C',font:{weight:'bold'}}},x:{grid:{display:false},ticks:{color:'#78716C',font:{weight:'bold'}}}}}});
-    document.getElementById('ph-cards').innerHTML=d.cluster_stats.map((s,i)=>`
-        <div class="ph-phenotype" style="border-color:${C[i]};">
-            <div class="name"><div class="dot" style="background:${C[i]};"></div><span style="color:${C[i]};">${s.name}</span></div>
-            <div class="row"><span class="k">Pacientes</span><span class="v">${s.n} (${s.pct}%)</span></div>
-            <div class="row"><span class="k">Edad prom.</span><span class="v">${s.avg_age} anos</span></div>
-            <div class="row"><span class="k">Estancia</span><span class="v">${s.avg_days} dias</span></div>
-            <div class="row"><span class="k">Rango</span><span class="v">${Math.round(s.min_hours/24)}-${Math.round(s.max_hours/24)}d</span></div>
-            <div class="tri">Triage: ${Object.entries(s.triage_dist).map(([k,v])=>k+': '+v).join(', ')}</div>
-        </div>`).join('');
-    dc('scatter');const sds=[];for(let c=0;c<d.k;c++){sds.push({label:d.cluster_names[c],data:d.patients.filter(p=>p.cluster===c).map(p=>({x:p.vector[2],y:p.vector[3]})),backgroundColor:CB[c],borderColor:C[c],borderWidth:2,pointRadius:5,pointHoverRadius:8});}
-    ch.scatter=new Chart(document.getElementById('ch-scatter'),{type:'scatter',data:{datasets:sds},options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{weight:'bold',size:11},usePointStyle:true,pointStyle:'circle',color:'#57534E'}}},scales:{x:{title:{display:true,text:'Horas de Estancia',color:'#57534E,font:{weight:'bold'}},grid:{color:'#FED7AA'},ticks:{color:'#78716C'}},y:{title:{display:true,text:'Variabilidad FC (DE)',color:'#57534E,font:{weight:'bold'}},grid:{color:'#FED7AA'},ticks:{color:'#78716C'}}}}});
-    document.getElementById('km-tbody').innerHTML=d.patients.sort((a,b)=>a.cluster-b.cluster).map(p=>`<tr>
-        <td style="font-weight:700;">${p.patient_name}</td>
-        <td class="c">${p.age}</td>
-        <td class="c"><span class="badge ${tBadge(p.triage_level)}">${p.triage_level}</span></td>
-        <td class="c" style="font-family:monospace;color:#78716C;">${p.hours_stay}h</td>
-        <td class="c" style="font-family:monospace;">${p.vector[3].toFixed(1)}</td>
-        <td class="c">${p.vector[5]}</td>
-        <td class="c"><span class="badge" style="background:${CB[p.cluster]};color:${C[p.cluster]};">${p.cluster_name}</span></td>
-    </tr>`).join('');
+
+    dc('elbow');
+    var elbowLabels=d.elbow.map(function(e){return 'K='+e.k;});
+    var elbowData=d.elbow.map(function(e){return e.inertia;});
+    ch.elbow=new Chart(document.getElementById('ch-elbow'),{
+        type:'line',
+        data:{labels:elbowLabels,datasets:[{data:elbowData,borderColor:'#7C3AED',backgroundColor:'rgba(124,58,237,0.08)',fill:true,tension:0.4,pointRadius:6,pointBackgroundColor:'#7C3AED',borderWidth:2.5}]},
+        options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{grid:{color:'#FED7AA'},ticks:{color:'#78716C',font:{weight:'bold'}}},x:{grid:{display:false},ticks:{color:'#78716C',font:{weight:'bold'}}}}}
+    });
+
+    dc('sil');
+    var silData=d.elbow.map(function(e){return e.silhouette;});
+    var silColors=d.elbow.map(function(e){return e.silhouette>0.5?'#059669':(e.silhouette>0.25?'#F59E0B':'#DC2626');});
+    ch.sil=new Chart(document.getElementById('ch-sil'),{
+        type:'bar',
+        data:{labels:elbowLabels,datasets:[{data:silData,backgroundColor:silColors,borderRadius:8,borderSkipped:false}]},
+        options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:-0.1,max:1,grid:{color:'#FED7AA'},ticks:{color:'#78716C',font:{weight:'bold'}}},x:{grid:{display:false},ticks:{color:'#78716C',font:{weight:'bold'}}}}}
+    });
+
+    var cardsHtml='';
+    for(var i=0;i<d.cluster_stats.length;i++){
+        var s=d.cluster_stats[i];
+        var triageParts=[];
+        for(var tk in s.triage_dist){triageParts.push(tk+': '+s.triage_dist[tk]);}
+        cardsHtml+='<div class="ph-phenotype" style="border-color:'+C[i]+';">';
+        cardsHtml+='<div class="name"><div class="dot" style="background:'+C[i]+';"></div><span style="color:'+C[i]+';">'+s.name+'</span></div>';
+        cardsHtml+='<div class="row"><span class="k">Pacientes</span><span class="v">'+s.n+' ('+s.pct+'%)</span></div>';
+        cardsHtml+='<div class="row"><span class="k">Edad prom.</span><span class="v">'+s.avg_age+' anos</span></div>';
+        cardsHtml+='<div class="row"><span class="k">Estancia</span><span class="v">'+s.avg_days+' dias</span></div>';
+        cardsHtml+='<div class="row"><span class="k">Rango</span><span class="v">'+Math.round(s.min_hours/24)+'-'+Math.round(s.max_hours/24)+'d</span></div>';
+        cardsHtml+='<div class="tri">Triage: '+triageParts.join(', ')+'</div>';
+        cardsHtml+='</div>';
+    }
+    document.getElementById('ph-cards').innerHTML=cardsHtml;
+
+    dc('scatter');
+    var sds=[];
+    for(var c=0;c<d.k;c++){
+        var pts=d.patients.filter(function(p){return p.cluster===c;});
+        sds.push({
+            label:d.cluster_names[c],
+            data:pts.map(function(p){return {x:p.vector[2],y:p.vector[3]};}),
+            backgroundColor:CB[c],borderColor:C[c],borderWidth:2,pointRadius:5,pointHoverRadius:8
+        });
+    }
+    ch.scatter=new Chart(document.getElementById('ch-scatter'),{
+        type:'scatter',
+        data:{datasets:sds},
+        options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{weight:'bold',size:11},usePointStyle:true,pointStyle:'circle',color:'#57534E'}}},scales:{x:{title:{display:true,text:'Horas de Estancia',color:'#57534E',font:{weight:'bold'}},grid:{color:'#FED7AA'},ticks:{color:'#78716C'}},y:{title:{display:true,text:'Variabilidad FC (DE)',color:'#57534E',font:{weight:'bold'}},grid:{color:'#FED7AA'},ticks:{color:'#78716C'}}}}
+    });
+
+    var sorted=d.patients.slice().sort(function(a,b){return a.cluster-b.cluster;});
+    var tbodyHtml='';
+    for(var p=0;p<sorted.length;p++){
+        var pt=sorted[p];
+        tbodyHtml+='<tr>';
+        tbodyHtml+='<td style="font-weight:700;">'+pt.patient_name+'</td>';
+        tbodyHtml+='<td class="c">'+pt.age+'</td>';
+        tbodyHtml+='<td class="c"><span class="badge '+tBadge(pt.triage_level)+'">'+pt.triage_level+'</span></td>';
+        tbodyHtml+='<td class="c" style="font-family:monospace;color:#78716C;">'+pt.hours_stay+'h</td>';
+        tbodyHtml+='<td class="c" style="font-family:monospace;">'+pt.vector[3].toFixed(1)+'</td>';
+        tbodyHtml+='<td class="c">'+pt.vector[5]+'</td>';
+        tbodyHtml+='<td class="c"><span class="badge" style="background:'+CB[pt.cluster]+';color:'+C[pt.cluster]+';">'+pt.cluster_name+'</span></td>';
+        tbodyHtml+='</tr>';
+    }
+    document.getElementById('km-tbody').innerHTML=tbodyHtml;
 }
 
 async function runPca(){
-    const comp=document.getElementById('pca-comp').value,btn=document.getElementById('btn-pca'),ld=document.getElementById('pca-load');
+    var comp=document.getElementById('pca-comp').value;
+    var btn=document.getElementById('btn-pca');
+    var ld=document.getElementById('pca-load');
     btn.disabled=true;ld.classList.add('show');
-    try{const r=await fetch('/superadmin/phenotyping/pca?components='+comp);const d=await r.json();if(d.error){alert(d.error);return;}renderPCA(d);}
-    catch(e){alert('Error: '+e.message);}finally{btn.disabled=false;ld.classList.remove('show');}
+    try{
+        var r=await fetch('/superadmin/phenotyping/pca?components='+comp);
+        var d=await r.json();
+        if(d.error){alert(d.error);return;}
+        renderPCA(d);
+    }catch(e){alert('Error: '+e.message);}
+    finally{btn.disabled=false;ld.classList.remove('show');}
 }
 
 function renderPCA(d){
     document.getElementById('pca-out').style.display='block';
-    const labels=d.explained_variance_pct.map((v,i)=>'PC'+(i+1));
-    dc('var');ch.var=new Chart(document.getElementById('ch-var'),{type:'bar',data:{labels,datasets:[
-        {label:'Varianza %',data:d.explained_variance_pct,backgroundColor:C.slice(0,labels.length),borderRadius:8,borderSkipped:false},
-        {label:'Acumulado %',data:d.cumulative_variance_pct,type:'line',borderColor:'#1E1A17',pointRadius:6,pointBackgroundColor:'#1E1A17',borderWidth:2,tension:0.15}
-    ]},options:{responsive:true,scales:{y:{max:100,ticks:{callback:v=>v+'%',color:'#78716C',font:{weight:'bold'}},grid:{color:'#FED7AA'}},x:{grid:{display:false},ticks:{color:'#78716C',font:{weight:'bold'}}}}}});
-    document.getElementById('pca-cards').innerHTML=d.component_names.map((name,i)=>`
-        <div class="ph-pca-card" style="border-top-color:${C[i]};">
-            <div class="pc-head"><div class="pc-badge" style="background:${C[i]};">PC${i+1}</div><div><div class="pc-name">${name}</div><div class="pc-pct">${d.explained_variance_pct[i]}% varianza</div></div></div>
-            <div style="display:flex;flex-direction:column;gap:0.25rem;">
-                ${d.loadings[i].map((l,j)=>{const color=l>0?'#059669':'#DC2626';const w=Math.abs(l)*100;return`<div style="display:flex;align-items:center;gap:0.35rem;font-size:0.7rem;"><span style="width:68px;color:#78716C;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${VN[j]}</span><div style="flex:1;height:5px;background:#FED7AA;border-radius:3px;overflow:hidden;"><div style="height:100%;width:${Math.min(w,100)}%;background:${color};border-radius:3px;"></div></div><span style="width:34px;text-align:right;font-family:monospace;font-weight:700;font-size:0.65rem;color:${color};">${l>0?'+':''}${l.toFixed(2)}</span></div>`;}).join('')}
-            </div>
-        </div>`).join('');
-    document.getElementById('ld-tbl').innerHTML=`<thead><tr><th>Variable</th>${d.component_names.map((n,i)=>'<th style="color:white;">PC'+(i+1)+'</th>').join('')}</tr></thead>
-    <tbody>${VN.map((v,j)=>`<tr><td>${v}</td>${d.loadings.map((comp,i)=>{const val=comp[j];const bg=val>0.4?'background:#D1FAE5':(val<-0.4?'background:#FEE2E2':'');const color=val>0?'#059669':'#DC2626';return`<td style="${bg}"><span style="color:${color};font-weight:700;font-family:monospace;">${val>0?'+:''}${val.toFixed(3)}</span></td>`;}).join('')}</tr>`).join('')}</tbody>`;
-    dc('pca-sc');ch['pca-sc']=new Chart(document.getElementById('ch-pca-sc'),{type:'scatter',data:{datasets:[{label:'Pacientes',data:d.patients.map(p=>({x:p.cluster_projection[0],y:p.cluster_projection[1]})),backgroundColor:'rgba(59,130,246,0.2)',borderColor:'#3B82F6',borderWidth:1.5,pointRadius:5,pointHoverRadius:8}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'PC1 ('+d.explained_variance_pct[0]+'%)',color:'#57534E,font:{weight:'bold'}},grid:{color:'#FED7AA'},ticks:{color:'#78716C'}},y:{title:{display:true,text:'PC2 ('+d.explained_variance_pct[1]+'%)',color:'#57534E,font:{weight:'bold'}},grid:{color:'#FED7AA'},ticks:{color:'#78716C'}}}}});
+    var labels=d.explained_variance_pct.map(function(v,i){return 'PC'+(i+1);});
+
+    dc('var');
+    ch.var=new Chart(document.getElementById('ch-var'),{
+        type:'bar',
+        data:{labels:labels,datasets:[
+            {label:'Varianza %',data:d.explained_variance_pct,backgroundColor:C.slice(0,labels.length),borderRadius:8,borderSkipped:false},
+            {label:'Acumulado %',data:d.cumulative_variance_pct,type:'line',borderColor:'#1E1A17',pointRadius:6,pointBackgroundColor:'#1E1A17',borderWidth:2,tension:0.15}
+        ]},
+        options:{responsive:true,scales:{y:{max:100,ticks:{callback:function(v){return v+'%';},color:'#78716C',font:{weight:'bold'}},grid:{color:'#FED7AA'}},x:{grid:{display:false},ticks:{color:'#78716C',font:{weight:'bold'}}}}}
+    });
+
+    // PCA Cards - sin backticks anidados
+    var pcaCardsHtml='';
+    for(var i=0;i<d.component_names.length;i++){
+        var name=d.component_names[i];
+        var loadings=d.loadings[i];
+        pcaCardsHtml+='<div class="ph-pca-card" style="border-top-color:'+C[i]+';">';
+        pcaCardsHtml+='<div class="pc-head"><div class="pc-badge" style="background:'+C[i]+';">PC'+(i+1)+'</div><div><div class="pc-name">'+name+'</div><div class="pc-pct">'+d.explained_variance_pct[i]+'% varianza</div></div></div>';
+        pcaCardsHtml+='<div style="display:flex;flex-direction:column;gap:0.25rem;">';
+        for(var j=0;j<loadings.length;j++){
+            var l=loadings[j];
+            var lcolor=l>0?'#059669':'#DC2626';
+            var w=Math.min(Math.abs(l)*100,100);
+            pcaCardsHtml+='<div style="display:flex;align-items:center;gap:0.35rem;font-size:0.7rem;">';
+            pcaCardsHtml+='<span style="width:68px;color:#78716C;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+VN[j]+'</span>';
+            pcaCardsHtml+='<div style="flex:1;height:5px;background:#FED7AA;border-radius:3px;overflow:hidden;"><div style="height:100%;width:'+w+'%;background:'+lcolor+';border-radius:3px;"></div></div>';
+            pcaCardsHtml+='<span style="width:34px;text-align:right;font-family:monospace;font-weight:700;font-size:0.65rem;color:'+lcolor+';">'+(l>0?'+':'')+l.toFixed(2)+'</span>';
+            pcaCardsHtml+='</div>';
+        }
+        pcaCardsHtml+='</div></div>';
+    }
+    document.getElementById('pca-cards').innerHTML=pcaCardsHtml;
+
+    // Loadings table - sin backticks anidados
+    var tblHtml='<thead><tr><th>Variable</th>';
+    for(var i=0;i<d.component_names.length;i++){
+        tblHtml+='<th style="color:white;">PC'+(i+1)+'</th>';
+    }
+    tblHtml+='</tr></thead><tbody>';
+    for(var j=0;j<VN.length;j++){
+        tblHtml+='<tr><td>'+VN[j]+'</td>';
+        for(var i=0;i<d.loadings.length;i++){
+            var val=d.loadings[i][j];
+            var bg=val>0.4?'background:#D1FAE5':(val<-0.4?'background:#FEE2E2':'');
+            var vcolor=val>0?'#059669':'#DC2626';
+            tblHtml+='<td style="'+bg+'"><span style="color:'+vcolor+';font-weight:700;font-family:monospace;">'+(val>0?'+':'')+val.toFixed(3)+'</span></td>';
+        }
+        tblHtml+='</tr>';
+    }
+    tblHtml+='</tbody>';
+    document.getElementById('ld-tbl').innerHTML=tblHtml;
+
+    // Scatter plot
+    dc('pca-sc');
+    ch['pca-sc']=new Chart(document.getElementById('ch-pca-sc'),{
+        type:'scatter',
+        data:{datasets:[{label:'Pacientes',data:d.patients.map(function(p){return {x:p.cluster_projection[0],y:p.cluster_projection[1]};}),backgroundColor:'rgba(59,130,246,0.2)',borderColor:'#3B82F6',borderWidth:1.5,pointRadius:5,pointHoverRadius:8}]},
+        options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{title:{display:true,text:'PC1 ('+d.explained_variance_pct[0]+'%)',color:'#57534E',font:{weight:'bold'}},grid:{color:'#FED7AA'},ticks:{color:'#78716C'}},y:{title:{display:true,text:'PC2 ('+d.explained_variance_pct[1]+'%)',color:'#57534E',font:{weight:'bold'}},grid:{color:'#FED7AA'},ticks:{color:'#78716C'}}}}
+    });
 }
 </script>
 @endsection
