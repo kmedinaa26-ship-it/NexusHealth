@@ -122,10 +122,10 @@
         <div class="ph-var-item"><div class="ph-var-num" style="background:#DC2626;">02</div><div class="ph-var-text">Severidad Entrada</div></div>
         <div class="ph-var-item"><div class="ph-var-num" style="background:#3B82F6;">03</div><div class="ph-var-text">FC Promedio</div></div>
         <div class="ph-var-item"><div class="ph-var-num" style="background:#EC4899;">04</div><div class="ph-var-text">Variabilidad FC</div></div>
-        <div class="ph-var-item"><div class="ph-var-num" style="background:#F59E0B;">05</div><div class="ph-var-text">Variabilidad Temp</div></div>
-        <div class="ph-var-item"><div class="ph-var-num" style="background:#059669;">06</div><div class="ph-var-text">Medicamentos Distintos</div></div>
-        <div class="ph-var-item"><div class="ph-var-num" style="background:#7C3AED;">07</div><div class="ph-var-text">Intensidad Monitoreo</div></div>
-        <div class="ph-var-item"><div class="ph-var-num" style="background:#2563EB;">08</div><div class="ph-var-text">Carga Diagnostica</div></div>
+        <div class="ph-var-item"><div class="ph-var-num" style="background:#F59E0B;">05</div><div class="ph-var-text">Temp Promedio</div></div>
+        <div class="ph-var-item"><div class="ph-var-num" style="background:#059669;">06</div><div class="ph-var-text">Variabilidad Temp</div></div>
+        <div class="ph-var-item"><div class="ph-var-num" style="background:#7C3AED;">07</div><div class="ph-var-text">SpO2 Promedio</div></div>
+        <div class="ph-var-item"><div class="ph-var-num" style="background:#2563EB;">08</div><div class="ph-var-text">Variabilidad SpO2</div></div>
     </div>
 </div>
 
@@ -162,7 +162,7 @@
             <div class="ph-wrap-head"><h3><i class="fas fa-table"></i> Detalle por Paciente</h3></div>
             <div class="ph-scroll">
                 <table class="ph-tbl">
-                    <thead><tr><th>Paciente</th><th class="c">Edad</th><th class="c">Triage</th><th class="c">Horas</th><th class="c">Var FC</th><th class="c">Meds</th><th class="c">Fenotipo</th></tr></thead>
+                    <thead><tr><th>Paciente</th><th class="c">Edad</th><th class="c">Triage</th><th class="c">Horas</th><th class="c">Var FC</th><th class="c">SpO2</th><th class="c">Fenotipo</th></tr></thead>
                     <tbody id="km-tbody"></tbody>
                 </table>
             </div>
@@ -198,7 +198,7 @@
 <script>
 const C=['#DC2626','#059669','#F59E0B','#3B82F6','#7C3AED','#EC4899'];
 const CB=['rgba(220,38,38,0.15)','rgba(5,150,105,0.15)','rgba(245,158,11,0.15)','rgba(59,130,246,0.15)','rgba(124,58,237,0.15)','rgba(236,72,153,0.15)'];
-const VN=['Edad','Severidad','Horas Est.','Var. FC','Var. Temp','Medicamentos','Monitoreo','Carga Diag.'];
+const VN=['Edad','Severidad','FC Prom.','Var. FC','Temp Prom.','Var. Temp','SpO2 Prom.','Var. SpO2'];
 let ch={};
 function switchPhTab(t){
     document.querySelectorAll('.ph-tab').forEach(function(e){e.classList.remove('active');});
@@ -276,7 +276,7 @@ function renderKM(d){
     ch.scatter=new Chart(document.getElementById('ch-scatter'),{
         type:'scatter',
         data:{datasets:sds},
-        options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{weight:'bold',size:11},usePointStyle:true,pointStyle:'circle',color:'#57534E'}}},scales:{x:{title:{display:true,text:'Horas de Estancia',color:'#57534E',font:{weight:'bold'}},grid:{color:'#FED7AA'},ticks:{color:'#78716C'}},y:{title:{display:true,text:'Variabilidad FC (DE)',color:'#57534E',font:{weight:'bold'}},grid:{color:'#FED7AA'},ticks:{color:'#78716C'}}}}
+        options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{weight:'bold',size:11},usePointStyle:true,pointStyle:'circle',color:'#57534E'}}},scales:{x:{title:{display:true,text:'FC Promedio (bpm)',color:'#57534E',font:{weight:'bold'}},grid:{color:'#FED7AA'},ticks:{color:'#78716C'}},y:{title:{display:true,text:'Variabilidad FC (DE)',color:'#57534E',font:{weight:'bold'}},grid:{color:'#FED7AA'},ticks:{color:'#78716C'}}}}
     });
 
     var sorted=d.patients.slice().sort(function(a,b){return a.cluster-b.cluster;});
@@ -289,7 +289,7 @@ function renderKM(d){
         tbodyHtml+='<td class="c"><span class="badge '+tBadge(pt.triage_level)+'">'+pt.triage_level+'</span></td>';
         tbodyHtml+='<td class="c" style="font-family:monospace;color:#78716C;">'+pt.hours_stay+'h</td>';
         tbodyHtml+='<td class="c" style="font-family:monospace;">'+pt.vector[3].toFixed(1)+'</td>';
-        tbodyHtml+='<td class="c">'+pt.vector[5]+'</td>';
+        tbodyHtml+='<td class="c" style="font-family:monospace;">'+pt.vector[6].toFixed(1)+'%</td>';
         tbodyHtml+='<td class="c"><span class="badge" style="background:'+CB[pt.cluster]+';color:'+C[pt.cluster]+';">'+pt.cluster_name+'</span></td>';
         tbodyHtml+='</tr>';
     }

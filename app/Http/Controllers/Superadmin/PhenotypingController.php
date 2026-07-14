@@ -220,14 +220,14 @@ public function runPca(Request $request)
             $monitoring = $s->tomas / $hours * 24;
 
             $vector = [
-                round($t->age ?? 30, 2),
-                round($severityMap[$t->triage_level] ?? 3, 2),
-                round($hours, 2),
-                round($s->std_fc ?? 0, 2),
-                round($s->std_temp ?? 0, 2),
-                round($meds, 2),
-                round($monitoring, 2),
-                round($s->tomas / $hours, 2),
+                round($t->age ?? 30, 2),                          // 01 Edad
+                round($severityMap[$t->triage_level] ?? 3, 2),     // 02 Severidad
+                round($s->avg_fc ?? 80, 2),                       // 03 FC Promedio
+                round($s->std_fc ?? 0, 2),                        // 04 Var FC
+                round($s->avg_temp ?? 37, 2),                     // 05 Temp Promedio
+                round($s->std_temp ?? 0, 2),                      // 06 Var Temp
+                round($s->avg_spo2 ?? 95, 2),                     // 07 SpO2 Promedio
+                round($s->std_spo2 ?? 0, 2),                      // 08 Var SpO2
             ];
 
             $data[] = $vector;
