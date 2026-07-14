@@ -78,6 +78,7 @@
             <a href="{{ route('superadmin.monitorLive') }}" class="menu-item @yield('nav-monitor')"><i class="fas fa-broadcast-tower"></i> Monitor Live</a>
 
             <div class="menu-category">Datos e IA</div>
+            <a href="{{ route('superadmin.phenotyping.index') }}" class="menu-item @yield('nav-phenotyping')"><i class="fas fa-dna"></i> Fenotipado Clinico</a>
             <a href="{{ route('superadmin.mlDashboard') }}" class="menu-item @yield('nav-ml-dashboard')"><i class="fas fa-brain"></i> Dashboard ML</a>
             <a href="{{ route('superadmin.mapaCalor') }}" class="menu-item @yield('nav-mapa')"><i class="fas fa-fire-alt"></i> Mapa Calor</a>
             <a href="{{ route('superadmin.ingesta') }}" class="menu-item @yield('nav-ingesta')"><i class="fas fa-upload"></i> Ingesta</a>
