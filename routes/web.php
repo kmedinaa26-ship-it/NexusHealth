@@ -379,5 +379,7 @@ Route::middleware(['auth', 'verified', 'role:SuperAdmin,Administrador Hospitalar
     Route::get('/', [App\Http\Controllers\Superadmin\PhenotypingController::class, 'index'])->name('index');
     Route::get('/dataset', [App\Http\Controllers\Superadmin\PhenotypingController::class, 'buildDataset'])->name('dataset');
     Route::get('/kmeans', [App\Http\Controllers\Superadmin\PhenotypingController::class, 'runKmeans'])->name('kmeans');
+Route::get('/elbow', [App\Http\Controllers\Superadmin\PhenotypingController::class, 'elbowMethod'])->name('elbow');
+
     Route::get('/pca', [App\Http\Controllers\Superadmin\PhenotypingController::class, 'runPca'])->name('pca');
 });

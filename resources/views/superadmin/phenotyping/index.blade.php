@@ -120,7 +120,7 @@
     <div class="ph-vars-grid">
         <div class="ph-var-item"><div class="ph-var-num" style="background:#E85D3A;">01</div><div class="ph-var-text">Edad</div></div>
         <div class="ph-var-item"><div class="ph-var-num" style="background:#DC2626;">02</div><div class="ph-var-text">Severidad Entrada</div></div>
-        <div class="ph-var-item"><div class="ph-var-num" style="background:#3B82F6;">03</div><div class="ph-var-text">Horas Estancia</div></div>
+        <div class="ph-var-item"><div class="ph-var-num" style="background:#3B82F6;">03</div><div class="ph-var-text">FC Promedio</div></div>
         <div class="ph-var-item"><div class="ph-var-num" style="background:#EC4899;">04</div><div class="ph-var-text">Variabilidad FC</div></div>
         <div class="ph-var-item"><div class="ph-var-num" style="background:#F59E0B;">05</div><div class="ph-var-text">Variabilidad Temp</div></div>
         <div class="ph-var-item"><div class="ph-var-num" style="background:#059669;">06</div><div class="ph-var-text">Medicamentos Distintos</div></div>
