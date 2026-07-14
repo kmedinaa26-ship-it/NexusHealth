@@ -56,6 +56,7 @@
         <div class="sidebar-menu">
             <div class="menu-category">Panel</div>
             <a href="{{ route('farmacia.dashboard') }}" class="menu-item @yield('nav-dashboard')"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+            <a href="{{ route('farmacia.pos') }}" class="menu-item @yield('nav-pos')"><i class="fas fa-cash-register"></i> Punto de Venta</a>
 
             <div class="menu-category">Farmacia Central</div>
             <a href="{{ route('farmacia.inventory') }}" class="menu-item @yield('nav-inventario')"><i class="fas fa-warehouse"></i> <span><span class="tag tag-central">C</span>Inventario</span></a>

@@ -13,6 +13,8 @@ use App\Models\PatientMedication;
 use App\Models\CrashCart;
 use App\Models\RestockRequest;
 use App\Models\MedicationAlternative;
+use App\Services\BillingService;
+use App\Models\PatientAccount;
 use Illuminate\Http\Request;
 
 class PharmacyController extends Controller
@@ -133,6 +135,25 @@ class PharmacyController extends Controller
             'quantity' => $request->quantity, 'dispensed_by' => auth()->id(),
             'prescribed_by' => $doctor->id, 'interaction_alert' => $interactionAlert,
             'interaction_details' => $interactionDetails,
+        ]);
+
+        // FACTURACIÓN: Cargar a la cuenta del paciente
+        $billingService = new BillingService();
+        $account = PatientAccount::firstOrCreate(
+            ['patient_id' => $patient->id, 'status' => 'abierta'],
+            ['encounter_type' => 'urgencia', 'opened_at' => now()]
+        );
+        $billingService->addCharge($account->id, [
+            'type' => 'producto',
+            'concept' => $med->name . ' (Receta)',
+            'reference_type' => Medication::class,
+            'reference_id' => $med->id,
+            'quantity' => $request->quantity,
+            'unit_price' => $med->venta_price,
+            'line_total' => $med->venta_price * $request->quantity,
+            'source_module' => 'farmacia',
+            'prescribed_by' => $doctor->id,
+            'dispensed_by' => auth()->id(),
         ]);
 
         AuditLog::create(['user_id' => auth()->id(), 'user_name' => auth()->user()->name, 'user_role' => auth()->user()->role, 'action' => 'Medicamento Dispensado', 'module' => 'Farmacia - Recetas', 'ip_address' => $request->ip(), 'details' => "{$med->name} x{$request->quantity} para {$patient->patient_name}" . ($interactionAlert ? ' | ALERTA' : '')]);

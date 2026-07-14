@@ -125,6 +125,7 @@ Route::middleware(['auth', 'verified', 'role:Médico A,Médico B,Médico C,Espec
     Route::get('/quirofano', [DoctorController::class, 'quirofano'])->name('quirofano');
     Route::get('/controlados', [DoctorController::class, 'controlados'])->name('controlados');
     Route::get('/ia-medica', [DoctorController::class, 'iaMedica'])->name('iaMedica');
+    Route::post('/ia-medica/predecir', [DoctorController::class, 'iaMedicaPredecir'])->name('iaMedica.predecir');
     Route::get('/ambulancias-medico', [DoctorController::class, 'ambulancias'])->name('ambulancias');
     Route::get('/hospital-live-medico', [DoctorController::class, 'hospitalLive'])->name('hospitalLive');
     Route::get('/asistente-ia-medico', [DoctorController::class, 'asistenteIA'])->name('asistenteIA');
@@ -232,6 +233,10 @@ Route::middleware(['auth', 'verified', 'role:Farmacéutico,Admin Farmacia'])->pr
 // SUPERADMIN
 // ==========================================
 Route::middleware(['auth', 'verified', 'role:SuperAdmin,Administrador Hospitalario'])->prefix('superadmin')->name('superadmin.')->group(function () {
+    Route::get('/ml-dashboard', [App\Http\Controllers\MLDashboardController::class, 'index'])->name('mlDashboard');
+    Route::post('/ml-dashboard/upload', [App\Http\Controllers\MLDashboardController::class, 'uploadData'])->name('mlDashboard.upload');
+    Route::get('/ml-dashboard/generate-demo', [App\Http\Controllers\MLDashboardController::class, 'generateDemo'])->name('mlDashboard.generateDemo');
+    Route::get('/ml-dashboard/template', [App\Http\Controllers\MLDashboardController::class, 'downloadTemplate'])->name('mlDashboard.template');
     Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/personal', [SuperAdminController::class, 'personal'])->name('personal');
     Route::post('/personal', [SuperAdminController::class, 'storeUser'])->name('storeUser');
@@ -338,3 +343,41 @@ Route::middleware(['auth', 'verified', 'role:SuperAdmin,Administrador'])->group(
     Route::get("/bigdata/export-csv", [App\Http\Controllers\BigDataController::class, "exportCSV"])->name("superadmin.bigdata.csv");
 });
 Route::get("/superadmin/bigdata/export-csv", [App\Http\Controllers\BigDataController::class, "exportCSV"])->name("superadmin.bigdata.csv");
+
+// ML Dashboard — dentro del grupo superadmin se agrega abajo
+
+
+// Rutas Farmacia POS
+Route::get('/farmacia/pos', [App\Http\Controllers\FarmaciaPOSController::class, 'index'])->name('farmacia.pos')->middleware('auth');
+Route::post('/farmacia/pos/venta', [App\Http\Controllers\FarmaciaPOSController::class, 'processSale'])->name('farmacia.pos.venta')->middleware('auth');
+Route::get('/farmacia/pos/ticket/{id}', [App\Http\Controllers\FarmaciaPOSController::class, 'downloadTicket'])->name('farmacia.pos.ticket')->middleware('auth');
+
+// Rutas de Controlados y Caja
+Route::get('/superadmin/controlados', [App\Http\Controllers\ControladosController::class, 'index'])->name('superadmin.controlados')->middleware('auth');
+Route::post('/superadmin/controlados/{id}/aprobar', [App\Http\Controllers\ControladosController::class, 'aprobar'])->name('superadmin.controlados.aprobar')->middleware('auth');
+Route::post('/superadmin/controlados/{id}/rechazar', [App\Http\Controllers\ControladosController::class, 'rechazar'])->name('superadmin.controlados.rechazar')->middleware('auth');
+
+Route::get('/superadmin/caja', [App\Http\Controllers\CajaController::class, 'index'])->name('caja.index')->middleware('auth');
+Route::get('/superadmin/caja/{id}', [App\Http\Controllers\CajaController::class, 'show'])->name('caja.show')->middleware('auth');
+Route::post('/superadmin/caja/{id}/cobrar', [App\Http\Controllers\CajaController::class, 'cobrar'])->name('caja.cobrar')->middleware('auth');
+
+// Rutas de Quirófano
+Route::get('/superadmin/quirofano', [App\Http\Controllers\QuirofanoController::class, 'index'])->name('quirofano.index')->middleware('auth');
+Route::post('/superadmin/quirofano/cargar', [App\Http\Controllers\QuirofanoController::class, 'cargar'])->name('quirofano.cargar')->middleware('auth');
+    Route::get('/enfermeria/triage', [NurseController::class, 'triage'])->name('enfermeria.triage');
+    Route::post('/enfermeria/triage/validar/{id}', [NurseController::class, 'validarIA'])->name('enfermeria.triage.validar');
+    Route::post('/enfermeria/triage/registrar', [NurseController::class, 'storeUrgencia'])->name('enfermeria.triage.store');
+
+// Rutas del nuevo modulo Predictivo y Finanzas
+require __DIR__.'/predictivo-finanzas.php';
+
+
+// ==========================================
+// FENOTIPADO CLÍNICO (K-Means & PCA)
+// ==========================================
+Route::middleware(['auth', 'verified', 'role:SuperAdmin,Administrador Hospitalario'])->prefix('superadmin/phenotyping')->name('superadmin.phenotyping.')->group(function () {
+    Route::get('/', [App\Http\Controllers\Superadmin\PhenotypingController::class, 'index'])->name('index');
+    Route::get('/dataset', [App\Http\Controllers\Superadmin\PhenotypingController::class, 'buildDataset'])->name('dataset');
+    Route::get('/kmeans', [App\Http\Controllers\Superadmin\PhenotypingController::class, 'runKmeans'])->name('kmeans');
+    Route::get('/pca', [App\Http\Controllers\Superadmin\PhenotypingController::class, 'runPca'])->name('pca');
+});

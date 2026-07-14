@@ -56,6 +56,12 @@
         <a href="{{route('medico.signos')}}" class="ni @yield('nav-signos')"><i class="fas fa-heartbeat"></i> Signos Vitales</a>
         <a href="{{route('medico.estudios')}}" class="ni @yield('nav-estudios')"><i class="fas fa-microscope"></i> Estudios</a>
         <a href="{{route('medico.evolucion')}}" class="ni @yield('nav-evolución')"><i class="fas fa-notes-medical"></i> Evolución</a>
+        <div class="ns" style="color:#EA580C">Modelo Predictivo</div>
+        <a href="{{url('/medico/predictivo/simular')}}" class="ni @yield('nav-simulador')"><i class="fas fa-flask"></i> Simulador Clinico</a>
+        <a href="{{url('/medico/predictivo')}}" class="ni @yield('nav-predicciones')"><i class="fas fa-brain"></i> Predicciones</a>
+        <a href="{{url('/medico/predictivo/resultados')}}" class="ni @yield('nav-resultados')"><i class="fas fa-clipboard-check"></i> Cerrar Caso</a>
+        <a href="{{url('/medico/costos')}}" class="ni @yield('nav-costos')"><i class="fas fa-receipt"></i> Costos Evento</a>
+        <a href="{{url('/medico/predictivo/graficas')}}" class="ni @yield('nav-graficas-pred')"><i class="fas fa-chart-line"></i> Graficas Riesgo</a>
         @endif
 
         @if($isB)
@@ -110,15 +116,20 @@
         <div class="ns" style="color:#EA580C">🚑 Ambulancia / Traslados</div>
         <a href="{{url('/medico/ambulancias-medico')}}" class="ni @yield('nav-ambulancias')"><i class="fas fa-truck-medical"></i> Ambulancias</a>
         <a href="{{url('/medico/hospital-live-medico')}}" class="ni @yield('nav-hospital-live')"><i class="fas fa-tower-broadcast"></i> Hospital Live</a>
-        <div class="ns" style="color:#EA580C">🧠 IA Avanzada</div>
+        <div class="ns" style="color:#EA580C">Modelo Predictivo</div>
         <a href="{{url('/medico/asistente-ia-medico')}}" class="ni @yield('nav-asistente-ia')"><i class="fas fa-robot"></i> Asistente IA</a>
+        <a href="{{url('/medico/predictivo/simular')}}" class="ni @yield('nav-simulador')"><i class="fas fa-flask"></i> Simulador Clinico</a>
+        <a href="{{url('/medico/predictivo')}}" class="ni @yield('nav-predicciones')"><i class="fas fa-brain"></i> Predicciones IA</a>
+        <a href="{{url('/medico/predictivo/resultados')}}" class="ni @yield('nav-resultados')"><i class="fas fa-clipboard-check"></i> Cerrar Caso</a>
+        <a href="{{url('/medico/costos')}}" class="ni @yield('nav-costos')"><i class="fas fa-receipt"></i> Costos Evento</a>
+        <a href="{{url('/medico/predictivo/graficas')}}" class="ni @yield('nav-graficas-pred')"><i class="fas fa-chart-line"></i> Graficas Riesgo</a>
         @endif
 
         @if($isB)
         <div class="ns" style="color:#EA580C">🚑 Ambulancia</div>
         <a href="{{url('/medico/ambulancias-medico')}}" class="ni @yield('nav-ambulancias')"><i class="fas fa-truck-medical"></i> Ambulancias</a>
         <a href="{{url('/medico/hospital-live-medico')}}" class="ni @yield('nav-hospital-live')"><i class="fas fa-tower-broadcast"></i> Hospital Live</a>
-        <div class="ns" style="color:#EA580C">🧠 IA</div>
+        <div class="ns" style="color:#EA580C">Modelo Predictivo</div>
         <a href="{{url('/medico/asistente-ia-medico')}}" class="ni @yield('nav-asistente-ia')"><i class="fas fa-robot"></i> Asistente IA</a>
         @endif
 

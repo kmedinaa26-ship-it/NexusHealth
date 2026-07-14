@@ -26,16 +26,21 @@ class NurseController extends Controller
         return view('enfermeria.dashboard', compact('criticalPatients', 'hospitalized', 'bedsAvailable', 'critical', 'alerts'))->with('active', 'dashboard');
     }
 
-    public function triage()
-    {
-        $triages = Triage::orderBy('created_at', 'desc')->paginate(30);
-        $colors = ['Rojo' => '#DC2626', 'Naranja' => '#EA580C', 'Amarillo' => '#F59E0B', 'Verde' => '#F97316', 'Azul' => '#3B82F6'];
-        $bdTotalDocs = \App\Models\MongoTriageLog::where('timestamp', '>=', now()->startOfDay())->count();
-        $bdTodayPatients = \App\Models\MongoTriageLog::where('timestamp', '>=', now()->startOfDay())->count();
-        $bdAvgFc = round(\App\Models\MongoTriageLog::where('timestamp', '>=', now()->startOfDay())->avg('vitals_fc') ?? 0);
-        $bdRojoHoy = \App\Models\MongoTriageLog::where('timestamp', '>=', now()->startOfDay())->where('triage_level', 'Rojo')->count();
-        return view('superadmin.urgencias', compact('triages', 'colors', 'bdTotalDocs', 'bdTodayPatients', 'bdAvgFc', 'bdRojoHoy'));
-    }
+    // 🚀 MÓDULO 2: TRIAGE IA - COMPARATIVA Y MÉTRICAS
+    // MÓDULO TRIAGE: URGENCIAS + ANÁLISIS IA
+    // MÓDULO TRIAGE MANCHESTER + IA
+    // MÓDULO TRIAGE MANCHESTER + IA INTERACTIVA
+    // MÓDULO TRIAGE MANCHESTER + IA INTERACTIVA (PAGINADO)
+        // MÓDULO TRIAGE MANCHESTER + IA INTERACTIVA (PAGINADO)
+    
+    // MÓDULO TRIAGE MANCHESTER + IA INTERACTIVA (PAGINADO)
+    
+
+    
+
+
+
+    
 
     public function signosVitales()
     {
@@ -288,4 +293,132 @@ class NurseController extends Controller
 
         return view('enfermeria.bigdata', compact('stats', 'dist', 'train', 'test', 'val'));
     }
+
+    // MÓDULO TRIAGE MANCHESTER + IA INTERACTIVA (PAGINADO)
+    public function triage()
+    {
+        // 1. MÉTRICAS GLOBALES (Calculadas desde BD, instantáneas)
+        $totalEvaluados = Triage::whereNotNull('ia_validation')->count();
+        $vp = Triage::where('ia_validation', 'VP')->count();
+        $vn = Triage::where('ia_validation', 'VN')->count();
+        $fp = Triage::where('ia_validation', 'FP')->count();
+        $fn = Triage::where('ia_validation', 'FN')->count();
+        
+        $matriz = ['vp' => $vp, 'vn' => $vn, 'fp' => $fp, 'fn' => $fn];
+        $total = $vp + $vn + $fp + $fn;
+        
+        $accPct = $total > 0 ? round((($vp + $vn) / $total) * 100, 1) : 0;
+        $prePct = ($vp + $fp) > 0 ? round(($vp / ($vp + $fp)) * 100, 1) : 0;
+        $recPct = ($vp + $fn) > 0 ? round(($vp / ($vp + $fn)) * 100, 1) : 0;
+        $f1Pct = ($prePct + $recPct) > 0 ? round(2 * ($prePct * $recPct) / ($prePct + $recPct), 1) : 0;
+
+        $metricasExplicadas = [
+            'accuracy' => ['valor' => $accPct, 'formula' => '(VP+VN)/Total', 'explicacion' => "Del total de pacientes, el {$accPct}% fueron clasificados correctamente."],
+            'precision' => ['valor' => $prePct, 'formula' => 'VP/(VP+FP)', 'explicacion' => "De los que la IA marcó como Críticos, el {$prePct}% realmente lo eran."],
+            'recall' => ['valor' => $recPct, 'formula' => 'VP/(VP+FN)', 'explicacion' => "De todos los Críticos reales (Triage Rojo), la IA detectó al {$recPct}%."],
+            'f1' => ['valor' => $f1Pct, 'formula' => '2*(P*R)/(P+R)', 'explicacion' => "Equilibrio general del modelo: {$f1Pct}%."],
+        ];
+
+        $concordancia = $totalEvaluados > 0 ? round((($vp + $vn) / $totalEvaluados) * 100, 1) : 0;
+
+        // 2. PACIENTES ACTIVOS (PAGINADOS)
+        $pacientesActivos = Triage::whereIn('status', ['En Espera', 'En Atención'])->latest()->paginate(30);
+        
+        $grouped = ['Rojo' => [], 'Naranja' => [], 'Amarillo' => [], 'Verde' => [], 'Azul' => []];
+        foreach($pacientesActivos as $p) {
+            $nivel = $p->triage_level ?? 'Azul';
+            if(isset($grouped[$nivel])) $grouped[$nivel][] = $p;
+        }
+
+        // 3. HISTORIAL DE ERRORES RECIENTES
+        $erroresIA = Triage::whereIn('ia_validation', ['FN', 'FP'])->latest()->take(6)->get();
+
+        // 4. MÉTRICAS POR COLOR
+        $metricsByColor = [];
+        foreach(['Rojo', 'Naranja', 'Amarillo', 'Verde', 'Azul'] as $color) {
+            $totalC = Triage::where('triage_level', $color)->count();
+            $matchC = Triage::where('triage_level', $color)->where('ia_nivel', $color)->count();
+            $metricsByColor[$color] = $totalC > 0 ? round(($matchC / $totalC) * 100, 1) : 100;
+        }
+
+        // 5. IMPACTO CLÍNICO Y XAI
+        $pacientesHoy = Triage::whereDate('created_at', today())->count();
+        $criticosDetectados = Triage::whereDate('created_at', today())->where('triage_level', 'Rojo')->count();
+        $alertasHoy = Triage::whereDate('created_at', today())->whereIn('ia_validation', ['FN', 'FP'])->count();
+        
+        foreach($pacientesActivos as $p) {
+            $p->xai_reason = 'Sin signos vitales registrados. La IA asume valores normales (SpO2 98%, FC 80).';
+            if($p->ia_nivel == 'Verde') $p->xai_reason = 'SpO2 normal, Frecuencia Cardíaca estable y Temperatura sin fiebre detectada.';
+            elseif($p->ia_nivel == 'Rojo') $p->xai_reason = 'SpO2 crítico (<90%) o Frecuencia Cardíaca elevada (>120 bpm).';
+            elseif($p->ia_nivel == 'Amarillo') $p->xai_reason = 'Signos vitales en rango borderline (Fiebre o Taquicardia leve).';
+        }
+
+        $auditoriaReciente = Triage::whereNotNull('ia_validation')->latest()->take(10)->get();
+
+        return view('enfermeria.triage', compact(
+            'grouped', 'matriz', 'metricasExplicadas', 'totalEvaluados', 'concordancia', 'vp', 'vn', 'fp', 'fn', 'erroresIA', 'metricsByColor', 'pacientesActivos', 'pacientesHoy', 'criticosDetectados', 'alertasHoy', 'auditoriaReciente'
+        ));
+    }
+
+    public function validarIA(Request $request, $id)
+    {
+        $request->validate(['tipo' => 'required|in:VP,VN,FP,FN']);
+        $triage = Triage::findOrFail($id);
+        $triage->ia_validation = $request->tipo;
+        $triage->save();
+        return back()->with('success', 'Validación IA registrada. Las métricas se han actualizado.');
+    }
+
+
+    public function storeUrgencia(Request $request)
+    {
+        $request->validate([
+            'patient_name' => 'required',
+            'age' => 'required|numeric',
+            'triage_level' => 'required',
+            'chief_complaint' => 'required',
+        ]);
+
+        // Recoger signos vitales (asegurando que sean numéricos reales)
+        $spo2 = $request->filled('spo2') ? floatval($request->spo2) : 98;
+        $fc = $request->filled('fc') ? floatval($request->fc) : 80;
+        $temp = $request->filled('temp') ? floatval($request->temp) : 36.5;
+
+        // Calcular predicción IA con los signos vitales reales ingresados
+        $classificationService = new \App\Services\ML\ClassificationService();
+        $datos = ['spo2' => $spo2, 'frecuencia_cardiaca' => $fc, 'temperatura' => $temp];
+        $res = $classificationService->decisionTree($datos);
+        $clase = is_array($res) ? ($res['clase'] ?? 'Estable') : 'Estable';
+        
+        // Mapeo robusto: Normalizamos acentos para evitar fallos de comparación
+        $clase_norm = str_replace(['á', 'é', 'í', 'ó', 'ú'], ['a', 'e', 'i', 'o', 'u'], $clase);
+        $clase_lower = strtolower($clase_norm);
+        $nivel = 'Verde'; // Por defecto
+        if(str_contains($clase_lower, 'critico') || str_contains($clase_lower, 'uci') || str_contains($clase_lower, 'emergencia')) {
+            $nivel = 'Rojo';
+        } elseif(str_contains($clase_lower, 'moderado') || str_contains($clase_lower, 'observacion') || str_contains($clase_lower, 'urgente')) {
+            $nivel = 'Amarillo';
+        } elseif(str_contains($clase_lower, 'estable') || str_contains($clase_lower, 'bajo riesgo')) {
+            $nivel = 'Verde';
+        }
+
+        Triage::create([
+            'patient_name' => $request->patient_name,
+            'age' => $request->age,
+            'triage_level' => $request->triage_level,
+            'chief_complaint' => $request->chief_complaint,
+            'symptoms' => $request->chief_complaint, 
+            'status' => 'En Espera',
+            'assigned_doctor' => null,
+            'gender' => $request->gender ?? 'No especificado',
+            'ia_nivel' => $nivel,
+            'ia_clase' => $clase,
+            'vitals_spo2' => $spo2,
+            'vitals_fc' => $fc,
+            'vitals_temp' => $temp,
+        ]);
+
+        return back()->with('success', 'Paciente de urgencia registrado. IA evaluó los signos vitales y predijo: ' . $nivel);
+    }
+
 }

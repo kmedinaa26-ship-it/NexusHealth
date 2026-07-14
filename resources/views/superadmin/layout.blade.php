@@ -40,21 +40,37 @@
             <a href="{{ route('superadmin.personal') }}" class="menu-item @yield('nav-personal')"><i class="fas fa-user-md"></i> Personal</a>
             <a href="{{ route('superadmin.scoreRiesgo') }}" class="menu-item @yield('nav-score')"><i class="fas fa-user-tag"></i> Score Riesgo</a>
             <a href="{{ route('superadmin.roles') }}" class="menu-item @yield('nav-roles')"><i class="fas fa-key"></i> Roles</a>
+            <div class="menu-category" style="color:#7C3AED">🧠 ML - Machine Learning</div>
+            <a href="{{ url('/superadmin/ml/modelos') }}" class="menu-item @yield('nav-ml-modelos')"><i class="fas fa-sitemap"></i> Modelos</a>
+            <a href="{{ url('/superadmin/ml/dataset') }}" class="menu-item @yield('nav-ml-dataset')"><i class="fas fa-database"></i> Dataset</a>
+            <a href="{{ url('/superadmin/ml/evaluar') }}" class="menu-item @yield('nav-ml-evaluar')"><i class="fas fa-chart-pie"></i> Evaluar (Matriz)</a>
+            <a href="{{ url('/superadmin/ml/explicacion') }}" class="menu-item @yield('nav-ml-explicacion')"><i class="fas fa-search-plus"></i> Explicabilidad</a>
+            <a href="{{ url('/superadmin/ml/drift') }}" class="menu-item @yield('nav-ml-drift')"><i class="fas fa-chart-line"></i> Drift del Modelo</a>
+            <a href="{{ url('/superadmin/ml/retrain') }}" class="menu-item @yield('nav-ml-retrain')"><i class="fas fa-redo"></i> Re-entrenar</a>
+            <div class="menu-category" style="color:#059669">💰 Finanzas ML</div>
+            <a href="{{ url('/superadmin/finanzas/costos') }}" class="menu-item @yield('nav-fin-costos')"><i class="fas fa-file-invoice-dollar"></i> Costos</a>
+            <a href="{{ url('/superadmin/finanzas/cobros') }}" class="menu-item @yield('nav-fin-cobros')"><i class="fas fa-hand-holding-usd"></i> Cobros</a>
+            <a href="{{ url('/superadmin/finanzas/utilidad') }}" class="menu-item @yield('nav-fin-utilidad')"><i class="fas fa-balance-scale"></i> Utilidad</a>
+            <a href="{{ url('/superadmin/finanzas/incobrables') }}" class="menu-item @yield('nav-fin-incobrables')"><i class="fas fa-ban"></i> Incobrables</a>
+            <a href="{{ url('/superadmin/alertas-ml') }}" class="menu-item @yield('nav-alertas-ml')"><i class="fas fa-exclamation-triangle"></i> Alertas ML</a>
 
             <div class="menu-category">Operacion Hospitalaria</div>
             <a href="{{ route('superadmin.pacientes') }}" class="menu-item @yield('nav-pacientes')"><i class="fas fa-procedures"></i> Pacientes</a>
+            <a href="{{ url('/superadmin/quirofano') }}" class="menu-item @yield('nav-quirofano')"><i class="fas fa-cut"></i> Quirófano (Cobros)</a>
             <a href="{{ route('superadmin.urgencias') }}" class="menu-item @yield('nav-urgencias')"><i class="fas fa-ambulance"></i> Urgencias</a>
             <a href="{{ route('superadmin.farmacia') }}" class="menu-item @yield('nav-farmacia')"><i class="fas fa-pills"></i> Farmacia</a>
             <a href="{{ route('superadmin.camas') }}" class="menu-item @yield('nav-recursos')"><i class="fas fa-bed"></i> Camas</a>
 
-            <div class="menu-category">🚑 Ambulancia y Traslados</div>
+            <div class="menu-category">Ambulancia y Traslados</div>
             <a href="{{ url('/superadmin/ambulancias') }}" class="menu-item @yield('nav-ambulancias')"><i class="fas fa-truck-medical"></i> Ambulancias</a>
             <a href="{{ url('/superadmin/hospital-live') }}" class="menu-item @yield('nav-hospital-live')"><i class="fas fa-tower-broadcast"></i> Hospital Live</a>
 
-            <div class="menu-category">🧠 IA Medica</div>
+            <div class="menu-category">IA Medica</div>
             <a href="{{ url('/superadmin/asistente-ia') }}" class="menu-item @yield('nav-asistente-ia')"><i class="fas fa-robot"></i> Asistente IA</a>
 
             <div class="menu-category">Finanzas y Seguridad</div>
+            <a href="{{ url('/superadmin/controlados') }}" class="menu-item @yield('nav-controlados')"><i class="fas fa-shield-alt"></i> Autorización Controlados</a>
+            <a href="{{ url('/superadmin/caja') }}" class="menu-item @yield('nav-caja')"><i class="fas fa-cash-register"></i> Caja y Facturación</a>
             <a href="{{ route('superadmin.finanzas') }}" class="menu-item @yield('nav-finanzas')"><i class="fas fa-lock"></i> Finanzas (PIN)</a>
             <a href="{{ route('superadmin.auditoria') }}" class="menu-item @yield('nav-auditoria')"><i class="fas fa-scroll"></i> Auditoria</a>
         <a href="{{ url('/superadmin/bigdata') }}" style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.8rem;color:#78716C;text-decoration:none;font-size:0.82rem;font-weight:600;border-radius:8px;transition:0.15s"><i class="fas fa-database" style="width:18px;text-align:center;color:#7C3AED"></i> Big Data & DWH</a>
@@ -62,6 +78,8 @@
             <a href="{{ route('superadmin.monitorLive') }}" class="menu-item @yield('nav-monitor')"><i class="fas fa-broadcast-tower"></i> Monitor Live</a>
 
             <div class="menu-category">Datos e IA</div>
+            <a href="{{ route('superadmin.phenotyping.index') }}" class="menu-item @yield('nav-phenotyping')"><i class="fas fa-dna"></i> Fenotipado Clinico</a>
+            <a href="{{ route('superadmin.mlDashboard') }}" class="menu-item @yield('nav-ml-dashboard')"><i class="fas fa-brain"></i> Dashboard ML</a>
             <a href="{{ route('superadmin.mapaCalor') }}" class="menu-item @yield('nav-mapa')"><i class="fas fa-fire-alt"></i> Mapa Calor</a>
             <a href="{{ route('superadmin.ingesta') }}" class="menu-item @yield('nav-ingesta')"><i class="fas fa-upload"></i> Ingesta</a>
             <a href="{{ route('superadmin.limpieza') }}" class="menu-item @yield('nav-limpieza')"><i class="fas fa-broom"></i> Limpieza</a>
