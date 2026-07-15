@@ -14,18 +14,48 @@ class CheckRole
             return redirect('/login');
         }
 
-        $userRole = auth()->user()->role;
+        $userRole = strtolower(trim(auth()->user()->role));
 
         // Super Admin tiene acceso a TODO
-        if ($userRole === 'Super Admin') {
+        if (in_array($userRole, ['super admin', 'superadmin', 'administrador hospitalario', 'administrador'])) {
             return $next($request);
         }
 
-        // Verificar si el rol del usuario esta en los roles permitidos
-        if (in_array($userRole, $roles)) {
-            return $next($request);
+        // Extraer la letra del rol (ej: "médico a" → "a", "enfermera b" → "b")
+        $userGrade = $this->extractGrade($userRole);
+
+        // Comparar contra cada rol permitido
+        foreach ($roles as $role) {
+            $roleLower = strtolower(trim($role));
+            $roleGrade = $this->extractGrade($role);
+
+            if ($userGrade === $roleGrade) {
+                return $next($request);
+            }
+
+            // Si no tiene grado (ej: "enfermera", "farmacia"), comparar directo
+            if ($roleGrade === '' && $userRole === $roleLower) {
+                return $next($request);
+            }
         }
 
         abort(403, 'No tienes permiso para acceder a esta pagina.');
+    }
+
+    /**
+     * Extrae la letra del rol
+     * "Médico A" → "a", "Enfermera B" → "b", "Farmacéutico" → ""
+     */
+    private function extractGrade(string $role): string
+    {
+        $role = strtolower(trim($role));
+
+        // Si contiene letras sueltas al final (A, B, C, D), extraer la última
+        if (preg_match('/\b([a-z])\s*$/', $role, $matches)) {
+            return $matches[1];
+        }
+
+        // Si no tiene grado, devolver vacío
+        return '';
     }
 }
