@@ -599,10 +599,11 @@ class SuperAdminController extends Controller
 
     // --- ROLES ---
     public function roles() {
-        $roles = ['SuperAdmin', 'Administrador Hospitalario', 'Médico A', 'Médico B', 'Médico C', 'Enfermera A', 'Enfermera B', 'Enfermera C', 'Recepcionista', 'Farmacéutico', 'Admin Farmacia', 'Finanzas', 'Laboratorista', 'Urgenciólogo'];
+        $roles = \App\Models\User::where('role', '!=', 'SuperAdmin')->pluck('role')->unique()->sort()->values()->toArray();
         $modules = ['dashboard_ejecutivo' => 'Dashboard Ejecutivo', 'validacion_personal' => 'Validación de Personal', 'roles_permisos' => 'Roles y Permisos', 'seguridad' => 'Seguridad Centralizada', 'monitor_live' => 'Monitor Live Hospital', 'actividad_sospechosa' => 'Detección Sospechosa', 'replay_sesiones' => 'Replay de Sesiones', 'auditoria' => 'Auditoría Total', 'urgencias' => 'Centro de Urgencias', 'farmacia' => 'Supervisión Farmacia', 'recursos' => 'Recursos Hospitalarios', 'mapa_calor' => 'Mapa de Calor', 'ingesta_datos' => 'Centro de Ingesta', 'limpieza_datos' => 'Motor de Limpieza', 'etl_bigdata' => 'Centro ETL / Big Data', 'ia_anomalias' => 'IA Anomalías', 'arbol_decisiones' => 'Árbol de Decisiones', 'score_riesgo' => 'Score de Riesgo', 'reportes' => 'Reportes Automáticos'];
         $permissions = RolePermission::all();
-        return view('superadmin.roles', compact('roles', 'modules', 'permissions'));
+        $staff = \App\Models\User::where('role', '!=', 'SuperAdmin')->orderBy('role')->get();
+        return view('superadmin.roles', compact('roles', 'modules', 'permissions', 'staff'));
     }
 
     public function togglePermission(Request $request) {
@@ -694,4 +695,12 @@ class SuperAdminController extends Controller
         return back()->with('status', 'Paciente ingresado correctamente.');
     }
 
+
+    public function updatePin(Request $request, $id) {
+        $user = \App\Models\User::findOrFail($id);
+        $request->validate(["pin" => "required|digits:4"]);
+        $user->finance_pin = $request->pin;
+        $user->save();
+        return response()->json(["success" => true, "message" => "PIN actualizado correctamente."]);
+    }
 }

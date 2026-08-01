@@ -73,6 +73,7 @@
             </div>
             <div class="pin-sec" id="pa">
                 <form method="POST" action="{{route('medico.seleccionarPerfil')}}">@csrf
+                    <input type="hidden" name="role" value="Médico A">
                     <input type="password" class="pin-in" name="pin" maxlength="4" placeholder="PIN" autocomplete="off">
                     <button type="submit" class="pin-btn"><i class="fas fa-lock"></i> Ingresar</button>
                 </form>
@@ -90,6 +91,7 @@
             </div>
             <div class="pin-sec" id="pb">
                 <form method="POST" action="{{route('medico.seleccionarPerfil')}}">@csrf
+                    <input type="hidden" name="role" value="Médico B">
                     <input type="password" class="pin-in" name="pin" maxlength="4" placeholder="PIN" autocomplete="off">
                     <button type="submit" class="pin-btn"><i class="fas fa-lock"></i> Ingresar</button>
                 </form>
@@ -107,6 +109,7 @@
             </div>
             <div class="pin-sec" id="pc">
                 <form method="POST" action="{{route('medico.seleccionarPerfil')}}">@csrf
+                    <input type="hidden" name="role" value="Médico C">
                     <input type="password" class="pin-in" name="pin" maxlength="4" placeholder="PIN" autocomplete="off">
                     <button type="submit" class="pin-btn"><i class="fas fa-lock"></i> Ingresar</button>
                 </form>
@@ -116,6 +119,13 @@
     <a href="{{route('logout')}}" class="out" onclick="event.preventDefault();document.getElementById('lf').submit()"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a>
 </div>
 <form id="lf" action="{{route('logout')}}" method="POST" style="display:none">@csrf</form>
+
+@error('error')
+<script>
+    alert("⚠️ Error de Seguridad:\n{{ $message }}");
+</script>
+@enderror
+
 <script>
 let s=null;
 function sel(l){if(s===l)return;document.querySelectorAll('.pin-sec').forEach(x=>x.classList.remove('show'));document.getElementById('p'+l).classList.add('show');setTimeout(()=>document.getElementById('p'+l).querySelector('.pin-in').focus(),80);s=l}

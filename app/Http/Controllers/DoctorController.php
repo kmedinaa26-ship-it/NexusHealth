@@ -64,19 +64,33 @@ class DoctorController extends Controller
     public function seleccionarPerfil(Request $request)
     {
         $pin = $request->pin;
-        $profileMap = ['1111' => 'Médico A', '2222' => 'Médico B', '3333' => 'Médico C'];
-        $nameMap = ['1111' => 'Dr. Kenia Medina', '2222' => 'Dr. SF Gilkey', '3333' => 'Dr. KM Azuara'];
+        $role = $request->role;
 
-        if (isset($profileMap[$pin])) {
-            session(['doctor_profile' => $profileMap[$pin], 'doctor_name' => $nameMap[$pin]]);
+        // Buscar EXACTAMENTE el PIN atado a ese rol
+        $user = \App\Models\User::where('finance_pin', $pin)->where('role', $role)->first();
+
+        if ($user) {
+            session(['doctor_profile' => $user->role, 'doctor_name' => $user->name]);
             return redirect()->route('medico.dashboard');
         }
-        return back()->with('error', 'PIN incorrecto.');
+
+        // ENVIAR A AUDITORÍA
+        try {
+            \App\Models\AuditLog::create([
+                'user_id' => auth()->id(),
+                'action' => 'Intento de acceso PIN incorrecto',
+                'description' => "Intentó ingresar como {$role} con un PIN incorrecto.",
+                'ip_address' => $request->ip()
+            ]);
+        } catch (\Exception $e) {}
+
+        return back()->with('error', 'PIN incorrecto o no corresponde a este perfil.');
     }
 
     public function validarPin(Request $request)
     {
-        return response()->json(['success' => in_array($request->pin, ['1111', '2222', '3333'])]);
+        $user = \App\Models\User::where('finance_pin', $request->pin)->where('role', $request->role)->first();
+        return response()->json(['success' => $user ? true : false]);
     }
 
     // PACIENTES

@@ -15,23 +15,32 @@ Route::get('/', function () { return redirect()->route('login'); });
 // MÉDICO
 // ==========================================
 Route::middleware(['auth', 'verified', 'role:Médico A,Médico B,Médico C,Especialista'])->prefix('medico')->name('medico.')->group(function () {
-    Route::get('/especialista', [SpecialistController::class, 'dashboard'])->name('especialista.dashboard');
-    Route::get('/agenda', [SpecialistController::class, 'agenda'])->name('especialista.agenda');
-    Route::get('/especialista/pacientes', [SpecialistController::class, 'misPacientes'])->name('especialista.pacientes');
-    Route::get('/especialista/hospitalizados', [SpecialistController::class, 'hospitalizados'])->name('especialista.hospitalizados');
-    Route::get('/especialista/derivaciones', [SpecialistController::class, 'derivaciones'])->name('especialista.derivaciones');
-    Route::get('/especialista/reportes', [SpecialistController::class, 'reportes'])->name('especialista.reportes');
-    Route::get('/especialista/ia-medica', [SpecialistController::class, 'iaMedica'])->name('especialista.iaMedica');
-    Route::get('/especialista/medicamentos', [SpecialistController::class, 'medicamentos'])->name('especialista.medicamentos');
-    Route::post('/especialista/derivaciones/crear', [SpecialistController::class, 'crearDerivacion'])->name('especialista.derivaciones.crear');
-    Route::post('/especialista/derivaciones/{id}/aceptar', [SpecialistController::class, 'aceptarDerivacion'])->name('especialista.derivaciones.aceptar');
-    Route::post('/especialista/derivaciones/{id}/rechazar', [SpecialistController::class, 'rechazarDerivacion'])->name('especialista.derivaciones.rechazar');
-    Route::post('/especialista/derivaciones/{id}/reagendar', [SpecialistController::class, 'reagendarDerivacion'])->name('especialista.derivaciones.reagendar');
-    Route::post('/especialista/aceptar/{id}', [SpecialistController::class, 'aceptarPaciente'])->name('especialista.aceptar');
-    Route::post('/especialista/derivar/{id}', [SpecialistController::class, 'derivarPaciente'])->name('especialista.derivar');
-    Route::get('/especialidades', [SpecialtyController::class, 'index'])->name('especialidades');
-    Route::get('/especialidades/{id}', [SpecialtyController::class, 'show'])->name('especialidades.show');
-    Route::post('/especialidades/derivar/{patientId}', [SpecialtyController::class, 'derivar'])->name('especialidades.derivar');
+    // ==========================================
+    // 1. RUTAS EXCLUSIVAS DE ESPECIALISTA
+    // ==========================================
+    Route::middleware(['role:Especialista'])->group(function () {
+        Route::get('/especialista', [SpecialistController::class, 'dashboard'])->name('especialista.dashboard');
+        Route::get('/agenda', [SpecialistController::class, 'agenda'])->name('especialista.agenda');
+        Route::get('/especialista/pacientes', [SpecialistController::class, 'misPacientes'])->name('especialista.pacientes');
+        Route::get('/especialista/hospitalizados', [SpecialistController::class, 'hospitalizados'])->name('especialista.hospitalizados');
+        Route::get('/especialista/derivaciones', [SpecialistController::class, 'derivaciones'])->name('especialista.derivaciones');
+        Route::get('/especialista/reportes', [SpecialistController::class, 'reportes'])->name('especialista.reportes');
+        Route::get('/especialista/ia-medica', [SpecialistController::class, 'iaMedica'])->name('especialista.iaMedica');
+        Route::get('/especialista/medicamentos', [SpecialistController::class, 'medicamentos'])->name('especialista.medicamentos');
+        Route::post('/especialista/derivaciones/crear', [SpecialistController::class, 'crearDerivacion'])->name('especialista.derivaciones.crear');
+        Route::post('/especialista/derivaciones/{id}/aceptar', [SpecialistController::class, 'aceptarDerivacion'])->name('especialista.derivaciones.aceptar');
+        Route::post('/especialista/derivaciones/{id}/rechazar', [SpecialistController::class, 'rechazarDerivacion'])->name('especialista.derivaciones.rechazar');
+        Route::post('/especialista/derivaciones/{id}/reagendar', [SpecialistController::class, 'reagendarDerivacion'])->name('especialista.derivaciones.reagendar');
+        Route::post('/especialista/aceptar/{id}', [SpecialistController::class, 'aceptarPaciente'])->name('especialista.aceptar');
+        Route::post('/especialista/derivar/{id}', [SpecialistController::class, 'derivarPaciente'])->name('especialista.derivar');
+        Route::get('/especialidades', [SpecialtyController::class, 'index'])->name('especialidades');
+        Route::get('/especialidades/{id}', [SpecialtyController::class, 'show'])->name('especialidades.show');
+        Route::post('/especialidades/derivar/{patientId}', [SpecialtyController::class, 'derivar'])->name('especialidades.derivar');
+    });
+
+    // ==========================================
+    // 2. RUTAS COMUNES (A, B, C y Especialista)
+    // ==========================================
     Route::get('/dashboard', [DoctorController::class, 'dashboard'])->name('dashboard');
     Route::get('/seleccionar', [DoctorController::class, 'seleccionar'])->name('seleccionar');
     Route::post('/seleccionar-perfil', [DoctorController::class, 'seleccionarPerfil'])->name('seleccionarPerfil');
@@ -39,32 +48,26 @@ Route::middleware(['auth', 'verified', 'role:Médico A,Médico B,Médico C,Espec
     Route::post('/pin-verify', [DoctorController::class, 'validarPin'])->name('pin.verify');
     Route::get('/verify-profile', [DoctorController::class, 'seleccionar'])->name('verify.profile');
 
-    // PACIENTES
+    // PACIENTES (Corregido: Se renombró la ruta duplicada de Doctor para no chocar con la de Enfermería)
     Route::get('/pacientes', [DoctorController::class, 'pacientes'])->name('pacientes');
-    Route::post('/pacientes/{id}/alta', [NurseController::class, 'darAlta'])->name('darAlta');
     Route::post('/pacientes/{id}/asignar', [DoctorController::class, 'asignarPaciente'])->name('asignarPaciente');
     Route::get('/registrar-paciente', [DoctorController::class, 'registrarPaciente'])->name('registrarPaciente');
     Route::post('/registrar-paciente', [DoctorController::class, 'storeNuevoPaciente'])->name('storeNuevoPaciente');
     Route::get('/pacientes/{id}/editar', [DoctorController::class, 'editarPaciente'])->name('editarPaciente');
     Route::put('/pacientes/{id}', [DoctorController::class, 'actualizarPaciente'])->name('actualizarPaciente');
-    Route::post('/pacientes/{id}/alta', [DoctorController::class, 'darAlta'])->name('darAlta');
     Route::post('/pacientes/{id}/defuncion', [DoctorController::class, 'registrarDefuncion'])->name('registrarDefuncion');
     Route::post('/pacientes/{id}/derivar', [DoctorController::class, 'derivarPaciente'])->name('derivarPaciente');
 
-    // CONSULTA
+    // CONSULTA Y DIAGNÓSTICOS
     Route::get('/consulta', [DoctorController::class, 'consulta'])->name('consulta');
     Route::post('/consulta', [DoctorController::class, 'storeConsulta'])->name('storeConsulta');
-
-    // DIAGNÓSTICOS
     Route::get('/diagnosticos', [DoctorController::class, 'diagnosticos'])->name('diagnosticos');
     Route::post('/diagnosticos', [DoctorController::class, 'storeDiagnostico'])->name('storeDiagnostico');
 
-    // RECETAS
+    // RECETAS Y SIGNOS VITALES
     Route::get('/recetas', [DoctorController::class, 'recetas'])->name('recetas');
     Route::post('/recetas', [DoctorController::class, 'storeReceta'])->name('storeReceta');
     Route::put('/recetas/{id}/cancelar', [DoctorController::class, 'cancelarReceta'])->name('cancelarReceta');
-
-    // SIGNOS VITALES
     Route::get('/signos-vitales', [DoctorController::class, 'signosVitales'])->name('signos');
 
     // ESTUDIOS
@@ -73,10 +76,16 @@ Route::middleware(['auth', 'verified', 'role:Médico A,Médico B,Médico C,Espec
     Route::put('/estudios/{id}/resultado', [DoctorController::class, 'resultadoEstudio'])->name('resultadoEstudio');
     Route::delete('/estudios/{id}', [DoctorController::class, 'eliminarEstudio'])->name('eliminarEstudio');
 
-    // HOSPITALIZACIÓN
-    Route::get('/hospitalizacion', [DoctorController::class, 'hospitalizacion'])->name('hospitalizacion');
-    Route::post('/hospitalizacion', [DoctorController::class, 'storeHospitalizacion'])->name('storeHospitalizacion');
-    Route::post('/hospitalizacion/{id}/alta', [DoctorController::class, 'altaHospitalizacion'])->name('altaHospitalizacion');
+    // ==========================================
+    // 3. HOSPITALIZACIÓN (Médico A, B y Especialista) - NO Médico C
+    // ==========================================
+    Route::middleware(['role:Médico A,Médico B,Especialista'])->group(function () {
+        Route::get('/hospitalizacion', [DoctorController::class, 'hospitalizacion'])->name('hospitalizacion');
+        Route::post('/hospitalizacion', [DoctorController::class, 'storeHospitalizacion'])->name('storeHospitalizacion');
+        Route::post('/hospitalizacion/{id}/alta', [DoctorController::class, 'altaHospitalizacion'])->name('altaHospitalizacion');
+        // Nota: Si tienes rutas de UCI o Quirófano, pídelas aquí abajo
+    });
+
 
     // TRATAMIENTOS
     Route::get('/tratamientos', [DoctorController::class, 'tratamientos'])->name('tratamientos');
@@ -383,3 +392,5 @@ Route::get('/elbow', [App\Http\Controllers\Superadmin\PhenotypingController::cla
 
     Route::get('/pca', [App\Http\Controllers\Superadmin\PhenotypingController::class, 'runPca'])->name('pca');
 });
+
+Route::put('/superadmin/staff/{id}/pin', [App\Http\Controllers\SuperAdminController::class, 'updatePin'])->name('superadmin.updatePin')->middleware(['auth', 'verified', 'role:SuperAdmin,Administrador Hospitalario']);
