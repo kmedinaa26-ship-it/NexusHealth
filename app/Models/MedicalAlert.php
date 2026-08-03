@@ -7,7 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class MedicalAlert extends Model
 {
     protected $fillable = [
-        'vital_sign_id', 'triage_id', 'patient_name', 'type', 'category', 
-        'message', 'is_read', 'triggered_by', 'target_user_id'
+        'triage_id', 'nurse_id', 'doctor_id', 'type', 'severity',
+        'message', 'is_read', 'read_at' , 'triggered_by', 'patient_name'
     ];
+
+    public function triage() { return $this->belongsTo(Triage::class); }
+    public function nurse() { return $this->belongsTo(User::class, 'nurse_id'); }
+    public function doctor() { return $this->belongsTo(User::class, 'doctor_id'); }
 }
