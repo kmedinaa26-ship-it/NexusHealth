@@ -107,13 +107,18 @@ class SlaDashboardController extends Controller
             ->orderBy('started_at', 'desc')
             ->get();
 
-        $csv = "ID,Paciente,Modulo,Fecha Inicio,Duracion Min,Hora,Es Outlier,Z-Score\n";
+        $html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"></head><body><table border="1">';
+        $html .= '<tr><th>ID</th><th>Paciente</th><th>Módulo</th><th>Fecha Inicio</th><th>Duración (min)</th><th>Hora</th><th>Es Outlier</th><th>Z-Score</th></tr>';
         foreach ($logs as $l) {
-            $csv .= "{$l->id},{$l->patient_identifier},{$l->module},{$l->started_at},{$l->duration_minutes},{$l->start_hour}," . ($l->is_outlier ? 'SI' : 'NO') . "," . ($l->outlier_z_score ?? 'N/A') . "\n";
+            $fecha = $l->started_at ? $l->started_at->format('Y-m-d H:i') : '';
+            $zScore = $l->outlier_z_score !== null ? number_format($l->outlier_z_score, 2) : '0.00';
+            $outlier = $l->is_outlier ? 'SI' : 'NO';
+            $html .= "<tr><td>{$l->id}</td><td>{$l->patient_identifier}</td><td>{$l->module}</td><td>{$fecha}</td><td>{$l->duration_minutes}</td><td>{$l->start_hour}</td><td>{$outlier}</td><td>{$zScore}</td></tr>";
         }
+        $html .= '</table></body></html>';
 
-        return response($csv)
-            ->header('Content-Type', 'text/csv')
-            ->header('Content-Disposition', "attachment; filename=sla-{$module}-" . now()->format('Y-m-d') . ".csv");
+        return response($html)
+            ->header('Content-Type', 'application/vnd.ms-excel')
+            ->header('Content-Disposition', "attachment; filename=sla-{$module}-" . now()->format('Y-m-d') . ".xls");
     }
 }
