@@ -13,6 +13,7 @@ use App\Models\PatientMedication;
 use App\Models\CrashCart;
 use App\Models\RestockRequest;
 use App\Models\MedicationAlternative;
+use App\Models\ServiceLog; // <-- RELOJ SLA FARMACIA
 use App\Services\BillingService;
 use App\Models\PatientAccount;
 use Illuminate\Http\Request;
@@ -21,17 +22,14 @@ class PharmacyController extends Controller
 {
     // ===== DASHBOARD MEJORADO =====
     public function dashboard() {
-        // CENTRAL
         $centralStock = Medication::where('origin', 'Central')->sum('stock');
         $centralValue = Medication::where('origin', 'Central')->selectRaw('SUM(stock * price) as total')->value('total') ?? 0;
         $centralLow = Medication::where('origin', 'Central')->whereRaw('stock <= min_stock')->where('stock', '>', 0)->count();
         $centralOut = Medication::where('origin', 'Central')->where('stock', 0)->count();
         
-        // HOSPITALARIA
         $hospStock = Medication::whereIn('origin', ['Hospitalaria', 'Urgencias', 'Quirurgico'])->sum('stock');
         $hospValue = Medication::whereIn('origin', ['Hospitalaria', 'Urgencias', 'Quirurgico'])->selectRaw('SUM(stock * price) as total')->value('total') ?? 0;
         
-        // GENERAL
         $total = Medication::count();
         $low_stock = Medication::whereRaw('stock <= min_stock')->where('stock', '>', 0)->orderBy('stock', 'asc')->get();
         $expiring_soon = Medication::whereDate('expiry_date', '<=', now()->addDays(30))->orderBy('expiry_date', 'asc')->get();
@@ -40,14 +38,12 @@ class PharmacyController extends Controller
         $controlled = Medication::where('required_level', 'A')->count();
         $expiring_critical = Medication::whereDate('expiry_date', '<=', now()->addDays(7))->count();
         
-        // OPERACIONES
         $pending_orders = PurchaseOrder::whereIn('status', ['Borrador', 'Enviada', 'En Transito'])->count();
         $cart_alerts = CrashCart::where('status', '!=', 'Completo')->count();
         $dispensed_today = PatientMedication::whereDate('created_at', today())->count();
         $controladosUsados = PatientMedication::whereDate('created_at', today())->whereHas('medication', function($q) { $q->where('required_level', 'A'); })->count();
         $pending_restock = RestockRequest::whereIn('status', ['Solicitada', 'Aprobada'])->count();
         
-        // TOP MEDICAMENTOS DISPENSADOS HOY
         $topDispensed = PatientMedication::whereDate('created_at', today())
             ->selectRaw('medication_name, SUM(quantity) as total')
             ->groupBy('medication_name')
@@ -55,7 +51,6 @@ class PharmacyController extends Controller
             ->take(5)
             ->get();
             
-        // ULTIMAS DISPENSACIONES
         $recentDispensed = PatientMedication::orderBy('created_at', 'desc')->take(8)->get();
 
         return view('farmacia.dashboard', compact(
@@ -67,7 +62,6 @@ class PharmacyController extends Controller
         ));
     }
 
-    // ===== INVENTARIO =====
     public function inventory() {
         $medications = Medication::orderBy('origin')->orderBy('required_level')->get();
         return view('farmacia.inventory', compact('medications'));
@@ -97,7 +91,6 @@ class PharmacyController extends Controller
         return back()->with('success', 'Medicamento registrado.');
     }
 
-    // ===== DISPENSACION =====
     public function dispensacion() {
         $medications = Medication::where('stock', '>', 0)->orderBy('name')->get();
         $patients = Triage::whereIn('status', ['En Espera', 'En Atención', 'Hospitalizado'])->get();
@@ -137,7 +130,6 @@ class PharmacyController extends Controller
             'interaction_details' => $interactionDetails,
         ]);
 
-        // FACTURACIÓN: Cargar a la cuenta del paciente
         $billingService = new BillingService();
         $account = PatientAccount::firstOrCreate(
             ['patient_id' => $patient->id, 'status' => 'abierta'],
@@ -155,6 +147,19 @@ class PharmacyController extends Controller
             'prescribed_by' => $doctor->id,
             'dispensed_by' => auth()->id(),
         ]);
+
+        // ==========================================
+        // 🚨 RELOJ SLA FARMACIA CONECTADO 🚨
+        // Mide tiempo desde que el paciente llegó al hospital hasta la entrega de la medicina
+        ServiceLog::logFromEvent(
+            'farmacia', 
+            'dispensacion', 
+            $patient->created_at, 
+            now(), 
+            auth()->id(), 
+            'PAC-' . $patient->id
+        );
+        // ==========================================
 
         AuditLog::create(['user_id' => auth()->id(), 'user_name' => auth()->user()->name, 'user_role' => auth()->user()->role, 'action' => 'Medicamento Dispensado', 'module' => 'Farmacia - Recetas', 'ip_address' => $request->ip(), 'details' => "{$med->name} x{$request->quantity} para {$patient->patient_name}" . ($interactionAlert ? ' | ALERTA' : '')]);
 
@@ -193,7 +198,6 @@ class PharmacyController extends Controller
         AuditLog::create(['user_id' => auth()->id(), 'user_name' => auth()->user()->name, 'user_role' => auth()->user()->role, 'action' => 'Solicitud Auto Reabastecimiento', 'module' => 'Farmacia - Desabasto', 'ip_address' => request()->ip(), 'details' => "{$reqNum}: {$med->name} x{$qty} - Prioridad: {$priority}"]);
     }
 
-    // ===== DESABASTO MEJORADO =====
     public function desabasto() {
         $low = Medication::whereRaw('stock <= min_stock')->where('stock', '>', 0)->orderBy('stock', 'asc')->get();
         $out = Medication::where('stock', 0)->orderBy('name')->get();
@@ -223,14 +227,12 @@ class PharmacyController extends Controller
         return back()->with('success', "Solicitud {$req->request_number} aprobada.");
     }
 
-    // ===== HISTORIAL PACIENTE =====
     public function pacienteHistorial($id) {
         $patient = Triage::findOrFail($id);
         $medications = PatientMedication::where('triage_id', $id)->orderBy('created_at', 'desc')->get();
         return view('farmacia.paciente_historial', compact('patient', 'medications'));
     }
 
-    // ===== ORDENES DE COMPRA =====
     public function ordenes() {
         $orders = PurchaseOrder::with('provider', 'items.medication')->orderBy('created_at', 'desc')->get();
         return view('farmacia.ordenes', compact('orders'));
@@ -268,13 +270,11 @@ class PharmacyController extends Controller
         return back()->with('success', "Orden recibida. Stock actualizado.");
     }
 
-    // ===== PROVEEDORES =====
     public function proveedores() {
         $providers = Provider::orderBy('name')->get();
         return view('farmacia.proveedores', compact('providers'));
     }
 
-    // ===== CRASH CARTS =====
     public function crashCarts() {
         $carts = CrashCart::orderBy('name')->get();
         return view('farmacia.crash_carts', compact('carts'));
@@ -287,7 +287,6 @@ class PharmacyController extends Controller
         return back()->with('success', "{$cart->name} verificado.");
     }
 
-    // ===== OTRAS VISTAS =====
     public function movimientos() {
         $logs = AuditLog::where('module', 'LIKE', 'Farmacia%')->orderBy('created_at', 'desc')->take(50)->get();
         return view('farmacia.movimientos', compact('logs'));
