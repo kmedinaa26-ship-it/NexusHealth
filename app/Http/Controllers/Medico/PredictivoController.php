@@ -14,7 +14,7 @@ class PredictivoController extends Controller
     public function index()
     {
         $predicciones = DB::table('predicciones_clinicas')
-            ->where('doctor_id', auth()->id())
+            ->where('user_id', auth()->id())
             ->where('estado', 'activa')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -63,7 +63,7 @@ class PredictivoController extends Controller
 
         $id = DB::table('predicciones_clinicas')->insertGetId([
             'patient_id' => $request->patient_id,
-            'doctor_id' => auth()->id(),
+            'user_id' => auth()->id(),
             'modelo_version_id' => $versionId,
             'datos_entrada' => json_encode($datos),
             'probabilidad' => $riesgo,
@@ -96,7 +96,7 @@ class PredictivoController extends Controller
     public function resultados()
     {
         $pendientes = DB::table('predicciones_clinicas')
-            ->where('doctor_id', auth()->id())
+            ->where('user_id', auth()->id())
             ->where('estado', 'activa')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -104,7 +104,7 @@ class PredictivoController extends Controller
         $cerrados = DB::table('predicciones_clinicas')
             ->leftJoin('resultados_reales', 'predicciones_clinicas.id', '=', 'resultados_reales.prediccion_id')
             ->select('predicciones_clinicas.*', 'resultados_reales.resultado_real', 'resultados_reales.dias_hospitalizacion', 'resultados_reales.costo_real')
-            ->where('predicciones_clinicas.doctor_id', auth()->id())
+            ->where('predicciones_clinicas.user_id', auth()->id())
             ->where('predicciones_clinicas.estado', 'cerrada')
             ->orderBy('predicciones_clinicas.updated_at', 'desc')
             ->get();

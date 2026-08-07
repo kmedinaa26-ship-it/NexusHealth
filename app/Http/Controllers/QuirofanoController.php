@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Triage;
 use App\Models\Medication;
 use App\Models\PatientAccount;
+use App\Models\ServiceLog; // <-- NUEVO: Importamos el modelo SLA
 use App\Services\BillingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,7 +45,7 @@ class QuirofanoController extends Controller
             'type' => 'sala',
             'concept' => 'Uso de Quirófano (' . $request->horas_or . ' hrs)',
             'quantity' => $request->horas_or,
-            'unit_price' => 5000.00, // Precio fijo por hora
+            'unit_price' => 5000.00,
             'line_total' => 5000.00 * $request->horas_or,
             'source_module' => 'quirofano',
             'prescribed_by' => $doctorId,
@@ -55,7 +56,7 @@ class QuirofanoController extends Controller
             'type' => 'honorario',
             'concept' => 'Honorarios Médicos (' . $request->cirugia . ')',
             'quantity' => 1,
-            'unit_price' => 15000.00, // Honorario fijo
+            'unit_price' => 15000.00,
             'line_total' => 15000.00,
             'source_module' => 'quirofano',
             'prescribed_by' => $doctorId,
@@ -83,6 +84,24 @@ class QuirofanoController extends Controller
                 }
             }
         }
+
+        // ==========================================
+        // 🚨 NUEVO: RELOJ DEL SLA CONECTADO 🚨
+        // ==========================================
+        // Como el formulario no tiene "hora de inicio", asumimos que 
+        // la cirugía empezó hace X horas y terminó AHORA.
+        $horaFin = now();
+        $horaInicio = now()->subHours($request->horas_or);
+
+        ServiceLog::logFromEvent(
+            'quirofano',
+            'cirugia',
+            $horaInicio,
+            $horaFin,
+            $doctorId,
+            'PAC-' . $request->patient_id // Identificador anónimo
+        );
+        // ==========================================
 
         return redirect()->route('quirofano.index')->with('success', "¡Cirugía cargada a la cuenta del paciente exitosamente! Cuenta ID: {$accountId}");
     }

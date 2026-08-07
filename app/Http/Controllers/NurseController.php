@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\Medication;
 use App\Models\RestockRequest;
 use App\Models\PatientMedication;
+use App\Models\ServiceLog; // <-- RELOJ SLA AGREGADO
 use Illuminate\Http\Request;
 
 class NurseController extends Controller
@@ -26,22 +27,6 @@ class NurseController extends Controller
         return view('enfermeria.dashboard', compact('criticalPatients', 'hospitalized', 'bedsAvailable', 'critical', 'alerts'))->with('active', 'dashboard');
     }
 
-    // 🚀 MÓDULO 2: TRIAGE IA - COMPARATIVA Y MÉTRICAS
-    // MÓDULO TRIAGE: URGENCIAS + ANÁLISIS IA
-    // MÓDULO TRIAGE MANCHESTER + IA
-    // MÓDULO TRIAGE MANCHESTER + IA INTERACTIVA
-    // MÓDULO TRIAGE MANCHESTER + IA INTERACTIVA (PAGINADO)
-        // MÓDULO TRIAGE MANCHESTER + IA INTERACTIVA (PAGINADO)
-    
-    // MÓDULO TRIAGE MANCHESTER + IA INTERACTIVA (PAGINADO)
-    
-
-    
-
-
-
-    
-
     public function signosVitales()
     {
         $patients = Triage::whereIn('status', ['En Atención', 'Hospitalizado'])->orderBy('created_at', 'desc')->paginate(30);
@@ -53,7 +38,23 @@ class NurseController extends Controller
     {
         $request->validate(['triage_id' => 'required|exists:triages,id']);
         $triage = Triage::findOrFail($request->triage_id);
+        
+        // RELOJ SLA: Registrar SOLO la primera vez que se atiende este paciente en Urgencias
+        $yaExisteLog = AppModelsServiceLog::where('patient_identifier', 'PAC-' . $triage->id)->where('event_type', 'triage')->exists();
+        
         $triage->update($request->only(['vitals_ta', 'vitals_fc', 'vitals_temp', 'vitals_spo2']));
+        
+        if (!$yaExisteLog) {
+            AppModelsServiceLog::logFromEvent(
+                'urgencias', 
+                'triage', 
+                $triage->created_at, 
+                now(), 
+                auth()->id(), 
+                'PAC-' . $triage->id
+            );
+        }
+
         AuditLog::create(['user_id' => auth()->id(), 'user_name' => auth()->user()->name, 'user_role' => auth()->user()->role, 'action' => 'Signos Vitales', 'module' => 'Enfermería', 'ip_address' => $request->ip(), 'details' => 'Paciente: ' . $triage->patient_name]);
         return back()->with('success', 'Signos vitales registrados.');
     }
@@ -75,6 +76,17 @@ class NurseController extends Controller
         Hospitalization::create(['triage_id' => $request->triage_id, 'bed_id' => $request->bed_id, 'doctor_id' => $request->doctor_id ?? null, 'nurse_id' => auth()->id(), 'admission_date' => now(), 'diagnosis' => $request->diagnosis, 'status' => 'Ingresado']);
         $bed->update(['status' => 'Ocupada', 'patient_name' => $triage->patient_name, 'triage_level' => $triage->triage_level]);
         $triage->update(['status' => 'Hospitalizado']);
+        
+        // RELOJ SLA: Tiempo desde que llegó hasta que lo hospitalizan
+        ServiceLog::logFromEvent(
+            'urgencias', 
+            'hospitalizacion', 
+            $triage->created_at, 
+            now(), 
+            auth()->id(), 
+            'PAC-' . $triage->id
+        );
+
         AuditLog::create(['user_id' => auth()->id(), 'user_name' => auth()->user()->name, 'user_role' => auth()->user()->role, 'action' => 'Hospitalización', 'module' => 'Enfermería', 'ip_address' => $request->ip(), 'details' => $triage->patient_name]);
         return back()->with('success', 'Paciente hospitalizado.');
     }
@@ -294,10 +306,8 @@ class NurseController extends Controller
         return view('enfermeria.bigdata', compact('stats', 'dist', 'train', 'test', 'val'));
     }
 
-    // MÓDULO TRIAGE MANCHESTER + IA INTERACTIVA (PAGINADO)
     public function triage()
     {
-        // 1. MÉTRICAS GLOBALES (Calculadas desde BD, instantáneas)
         $totalEvaluados = Triage::whereNotNull('ia_validation')->count();
         $vp = Triage::where('ia_validation', 'VP')->count();
         $vn = Triage::where('ia_validation', 'VN')->count();
@@ -320,8 +330,6 @@ class NurseController extends Controller
         ];
 
         $concordancia = $totalEvaluados > 0 ? round((($vp + $vn) / $totalEvaluados) * 100, 1) : 0;
-
-        // 2. PACIENTES ACTIVOS (PAGINADOS)
         $pacientesActivos = Triage::whereIn('status', ['En Espera', 'En Atención'])->latest()->paginate(30);
         
         $grouped = ['Rojo' => [], 'Naranja' => [], 'Amarillo' => [], 'Verde' => [], 'Azul' => []];
@@ -330,10 +338,8 @@ class NurseController extends Controller
             if(isset($grouped[$nivel])) $grouped[$nivel][] = $p;
         }
 
-        // 3. HISTORIAL DE ERRORES RECIENTES
         $erroresIA = Triage::whereIn('ia_validation', ['FN', 'FP'])->latest()->take(6)->get();
 
-        // 4. MÉTRICAS POR COLOR
         $metricsByColor = [];
         foreach(['Rojo', 'Naranja', 'Amarillo', 'Verde', 'Azul'] as $color) {
             $totalC = Triage::where('triage_level', $color)->count();
@@ -341,7 +347,6 @@ class NurseController extends Controller
             $metricsByColor[$color] = $totalC > 0 ? round(($matchC / $totalC) * 100, 1) : 100;
         }
 
-        // 5. IMPACTO CLÍNICO Y XAI
         $pacientesHoy = Triage::whereDate('created_at', today())->count();
         $criticosDetectados = Triage::whereDate('created_at', today())->where('triage_level', 'Rojo')->count();
         $alertasHoy = Triage::whereDate('created_at', today())->whereIn('ia_validation', ['FN', 'FP'])->count();
@@ -356,7 +361,7 @@ class NurseController extends Controller
         $auditoriaReciente = Triage::whereNotNull('ia_validation')->latest()->take(10)->get();
 
         return view('enfermeria.triage', compact(
-            'grouped', 'matriz', 'metricasExplicadas', 'totalEvaluados', 'concordancia', 'vp', 'vn', 'fp', 'fn', 'erroresIA', 'metricsByColor', 'pacientesActivos', 'pacientesHoy', 'criticosDetectados', 'alertasHoy', 'auditoriaReciente'
+            'grouped', 'matriz', 'metricasExplicadas', 'totalEvaluados', 'concordancia', 'vp', 'vn', 'fp', $fn, 'erroresIA', 'metricsByColor', 'pacientesActivos', 'pacientesHoy', 'criticosDetectados', 'alertasHoy', 'auditoriaReciente'
         ));
     }
 
@@ -369,7 +374,6 @@ class NurseController extends Controller
         return back()->with('success', 'Validación IA registrada. Las métricas se han actualizado.');
     }
 
-
     public function storeUrgencia(Request $request)
     {
         $request->validate([
@@ -379,21 +383,18 @@ class NurseController extends Controller
             'chief_complaint' => 'required',
         ]);
 
-        // Recoger signos vitales (asegurando que sean numéricos reales)
         $spo2 = $request->filled('spo2') ? floatval($request->spo2) : 98;
         $fc = $request->filled('fc') ? floatval($request->fc) : 80;
         $temp = $request->filled('temp') ? floatval($request->temp) : 36.5;
 
-        // Calcular predicción IA con los signos vitales reales ingresados
         $classificationService = new \App\Services\ML\ClassificationService();
         $datos = ['spo2' => $spo2, 'frecuencia_cardiaca' => $fc, 'temperatura' => $temp];
         $res = $classificationService->decisionTree($datos);
         $clase = is_array($res) ? ($res['clase'] ?? 'Estable') : 'Estable';
         
-        // Mapeo robusto: Normalizamos acentos para evitar fallos de comparación
         $clase_norm = str_replace(['á', 'é', 'í', 'ó', 'ú'], ['a', 'e', 'i', 'o', 'u'], $clase);
         $clase_lower = strtolower($clase_norm);
-        $nivel = 'Verde'; // Por defecto
+        $nivel = 'Verde'; 
         if(str_contains($clase_lower, 'critico') || str_contains($clase_lower, 'uci') || str_contains($clase_lower, 'emergencia')) {
             $nivel = 'Rojo';
         } elseif(str_contains($clase_lower, 'moderado') || str_contains($clase_lower, 'observacion') || str_contains($clase_lower, 'urgente')) {
@@ -420,5 +421,4 @@ class NurseController extends Controller
 
         return back()->with('success', 'Paciente de urgencia registrado. IA evaluó los signos vitales y predijo: ' . $nivel);
     }
-
 }

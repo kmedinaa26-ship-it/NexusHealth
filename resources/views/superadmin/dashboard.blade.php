@@ -1,5 +1,4 @@
 @extends('superadmin.layout')
-@section('title', 'HealthNexus | Dashboard Ejecutivo Inteligente')
 @section('nav-dashboard', 'active')
 
 @section('content')

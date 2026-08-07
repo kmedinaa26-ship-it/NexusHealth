@@ -28,7 +28,7 @@
                     <label style="font-weight:800;color:#9A3412;font-size:0.8rem;display:block;margin-bottom:0.3rem">Paciente</label>
                     <select name="triage_id" required style="width:100%;padding:0.5rem;border:2px solid #FDBA74;border-radius:8px;font-size:0.85rem">
                         <option value="">Seleccionar paciente...</option>
-                        @foreach($pacientesDerivar as $p)
+                        @foreach(($pacientesDerivar ?? collect() ?? []) as $p)
                         <option value="{{ $p->id }}">{{ $p->patient_name }} - {{ $p->triage_level }}</option>
                         @endforeach
                     </select>

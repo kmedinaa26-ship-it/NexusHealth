@@ -29,7 +29,7 @@
                         @csrf
                         <select name="doctor_id" style="padding:0.2rem;border:1px solid #FCA5A5;border-radius:4px;font-size:0.7rem">
                             <option value="">Derivar a...</option>
-                            @foreach($todosMedicos as $doc)
+                            @foreach(($todosMedicos ?? collect() ?? []) as $doc)
                             <option value="{{ $doc->id }}">{{ $doc->name }}</option>
                             @endforeach
                         </select>
@@ -53,7 +53,7 @@
         <table style="width:100%;border-collapse:collapse;font-size:0.85rem">
             <thead><tr style="background:#FFEDD5"><th style="padding:0.6rem;text-align:left;color:#9A3412">Paciente</th><th style="padding:0.6rem;color:#9A3412">Triage</th><th style="padding:0.6rem;color:#9A3412">Estado</th><th style="padding:0.6rem;color:#9A3412">Acciones</th></tr></thead>
             <tbody>
-            @foreach($pendientes as $p)
+            @foreach(($pendientes ?? collect() ?? []) as $p)
             <tr style="border-bottom:1px solid #FFEDD5">
                 <td style="padding:0.5rem;font-weight:700">{{ $p->patient_name }}</td>
                 <td style="padding:0.5rem">
@@ -80,7 +80,7 @@
     <div style="background:white;border-radius:16px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.05);border-top:4px solid #2563EB">
         <h3 style="font-weight:900;color:#1E40AF;margin-bottom:1rem"><i class="fas fa-bed" style="color:#2563EB"></i> Estado de Camas</h3>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:0.5rem">
-            @foreach($camas as $cama)
+            @foreach(($camas ?? []) as $cama)
             <div style="border:2px solid {{ $cama->status == 'Disponible' ? '#16A34A' : '#DC2626' }};border-radius:8px;padding:0.6rem;text-align:center;background:{{ $cama->status == 'Disponible' ? '#F0FDF4' : '#FEF2F2' }}">
                 <i class="fas fa-bed" style="color:{{ $cama->status == 'Disponible' ? '#16A34A' : '#DC2626' }}"></i>
                 <div style="font-weight:800;font-size:0.75rem;color:{{ $cama->status == 'Disponible' ? '#16A34A' : '#DC2626' }}">{{ $cama->bed_number }}</div>

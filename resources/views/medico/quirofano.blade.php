@@ -10,7 +10,7 @@
 
 <style>
 .qf-card { border-radius:16px; padding:1.5rem; text-align:center; transition:all 0.3s; }
-.qf-free { background:linear-gradient(135deg,#D1FAE5,#A7F3D0); border:2px solid #10B981; }
+.qf-free { background:linear-gradient(135deg,#D1FAE5,#A7F3D0); border:2px solid #F97316; }
 .qf-busy { background:linear-gradient(135deg,#FEE2E2,#FECACA); border:2px solid #EF4444; }
 .qf-prep { background:linear-gradient(135deg,#FEF3C7,#FDE68A); border:2px solid #F59E0B; }
 </style>
