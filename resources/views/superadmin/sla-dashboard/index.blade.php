@@ -89,6 +89,11 @@
     .sla-live-badge { background:rgba(255,255,255,.25); color:#fff; padding:4px 12px; border-radius:20px; font-size:.72rem; font-weight:800; display:inline-flex; align-items:center; gap:6px; }
     .sla-live-badge::before { content:''; width:7px; height:7px; background:#fff; border-radius:50%; animation: slaBlink 1.4s infinite; }
 
+    /* BOTON FLOTANTE INGESTA */
+    .sla-fab { position: fixed; bottom: 2rem; right: 2rem; z-index: 50; box-shadow: 0 10px 25px -5px rgba(239,68,68,0.6); transition: transform 0.2s; }
+    .sla-fab:hover { transform: scale(1.05); }
+    .sla-fab button { background: linear-gradient(135deg, #F97316, #EF4444); color: white; border: none; padding: 1rem 1.5rem; border-radius: 50px; font-weight: 800; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; }
+
     @media (max-width: 1024px) {
         #sla-kpis { grid-template-columns: repeat(2,1fr); }
         #sla-charts-grid { grid-template-columns: 1fr; }
@@ -222,8 +227,19 @@
         </div>
     </div>
     @endif
-</div>
 
+    <!-- 🚀 BOTÓN FLOTANTE DE INGESTA MASIVA -->
+    <form action="{{ route('sla.generate') }}" method="POST" class="sla-fab">
+        @csrf
+        <button type="submit">
+            <i class="fas fa-database"></i> Ingesta Masiva (Demo)
+        </button>
+    </form>
+</div>
+<a href="{{ route('sla.export', ['module' => $module]) }}" class="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200">
+    <i class="fas fa-file-csv text-lg"></i>
+    Exportar CSV
+</a>
 <!-- LIBRERÍAS -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@sgratzl/chartjs-chart-boxplot@4"></script>
@@ -264,7 +280,7 @@ new Chart(document.getElementById('boxplotChart'), {
         datasets: [{
             label: 'Distribución',
             data: [[ @php echo implode(', ', [$boxplotData['min'], $boxplotData['q1'], $boxplotData['median'], $boxplotData['q3'], $boxplotData['max']]); @endphp ]],
-            backgroundColor: moduleColor + '40', // Color con 40% de transparencia
+            backgroundColor: moduleColor + '40',
             borderColor: moduleColor,
             borderWidth: 2,
             outlierBackgroundColor: outlierColor,
@@ -283,7 +299,6 @@ new Chart(document.getElementById('boxplotChart'), {
 // 3. HISTOGRAMA (Adapta su color al módulo)
 const histLabels = @json(array_keys($ranges));
 const histData = @json(array_values($ranges));
-// Si es la última barra (Anomalía), la pinta de rojo. Si no, usa el color del módulo.
 const histColors = histLabels.map(label => label.includes('Anomalía') ? outlierColor : moduleColor);
 
 new Chart(document.getElementById('histogramChart'), {
@@ -302,7 +317,7 @@ new Chart(document.getElementById('histogramChart'), {
     }
 });
 
-// 4. BARRAS HORIZONTALES (Esta SÍ mantiene los 3 colores fijos para comparar)
+// 4. BARRAS HORIZONTALES
 new Chart(document.getElementById('barChart'), {
     type: 'bar',
     data: {
@@ -310,7 +325,7 @@ new Chart(document.getElementById('barChart'), {
         datasets: [{
             label: 'Promedio (Min)',
             data: @json(array_column($barData, 'avg')),
-            backgroundColor: @json(array_column($barData, 'color')), // Naranja, Azul, Verde
+            backgroundColor: @json(array_column($barData, 'color')),
             borderRadius: 6,
             borderWidth: 1
         }]

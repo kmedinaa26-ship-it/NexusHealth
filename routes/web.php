@@ -394,15 +394,13 @@ Route::get('/elbow', [App\Http\Controllers\Superadmin\PhenotypingController::cla
 });
 
 Route::put('/superadmin/staff/{id}/pin', [App\Http\Controllers\SuperAdminController::class, 'updatePin'])->name('superadmin.updatePin')->middleware(['auth', 'verified', 'role:SuperAdmin,Administrador Hospitalario']);
-
 # SLA Y ANOMALÍAS (Idea 2 Aplicada)
 Route::get('/sla-dashboard', [SuperAdminController::class, 'slaDashboard'])->name('superadmin.sla.dashboard');
 Route::get('/sla-data', [SuperAdminController::class, 'getSlaData'])->name('superadmin.sla.data');
 
-// Pulso Operativo SLA Dashboard
-Route::get('/sla-dashboard', [App\Http\Controllers\SlaDashboardController::class, 'index'])->name('sla.dashboard');
-
 /* Pulso Operativo SLA Dashboard */
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/sla-dashboard', [App\Http\Controllers\SlaDashboardController::class, 'index'])->name('sla.dashboard');
+    Route::post('/sla-dashboard/generate', [App\Http\Controllers\SlaDashboardController::class, 'generateMassData'])->name('sla.generate');
+    Route::get('/sla-dashboard/export', [App\Http\Controllers\SlaDashboardController::class, 'exportCsv'])->name('sla.export');
 });
