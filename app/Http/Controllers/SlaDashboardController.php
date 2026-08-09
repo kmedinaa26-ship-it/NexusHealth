@@ -125,7 +125,9 @@ class SlaDashboardController extends Controller
         ];
 
         return view('superadmin.sla-dashboard.index', [
-            'module' => $module, 'config' => $config, 'modules' => self::MODULES, 'from' => $from, 'to' => $to,
+            'module' => $module, 'config' => $config, 'modules' => self::MODULES,
+            '' => \App\Models\SavedReport::orderBy('created_at', 'desc')->limit(20)->get(),
+            'from' => $from,'from' => $from, 'to' => $to,
             'stats' => $stats, 'normalPoints' => $normalPoints, 'outlierPoints' => $outlierPoints, 'outliersTable' => $outliersTable,
             'outlierChartData' => $stats['outliers']->map(function($l) use ($stats) {
                 return [
@@ -135,7 +137,7 @@ class SlaDashboardController extends Controller
                     'deviation' => round($l->duration_minutes - $stats['mean'], 1)
                 ];
             })->values(),
-            'ranges' => $ranges, 'boxplotData' => $boxplotData, 'boxplotAllModules' => $boxplotAllModules, 'boxplotChartData' => $boxplotChartData, 'shifts' => $shifts, 'guardias' => $guardias, 'dayTypes' => $dayTypes, 'barData' => $barData, 'outlierChartData' => $stats['outliers']->map(function($l) use ($stats) { return ['label' => $l->started_at->format('d/m H:i'), 'duration' => $l->duration_minutes, 'zscore' => $l->outlier_z_score, 'deviation' => round($l->duration_minutes - $stats['mean'], 1)]; })->values(), 'descriptiveTitle' => $descriptiveTitle, 'periodStart' => $periodStart, 'periodEnd' => $periodEnd, 'monthName' => $monthName, 'chartTitles' => $chartTitles, 'chartDescriptions' => $chartDescriptions
+            'ranges' => $ranges, 'boxplotData' => $boxplotData, 'boxplotAllModules' => $boxplotAllModules, 'boxplotChartData' => $boxplotChartData, 'shifts' => $shifts, 'guardias' => $guardias, 'dayTypes' => $dayTypes, 'guardias' => $guardias, 'dayTypes' => $dayTypes, 'barData' => $barData, 'outlierChartData' => $stats['outliers']->map(function($l) use ($stats) { return ['label' => $l->started_at->format('d/m H:i'), 'duration' => $l->duration_minutes, 'zscore' => $l->outlier_z_score, 'deviation' => round($l->duration_minutes - $stats['mean'], 1)]; })->values(), 'descriptiveTitle' => $descriptiveTitle, 'periodStart' => $periodStart, 'periodEnd' => $periodEnd, 'monthName' => $monthName, 'chartTitles' => $chartTitles, 'chartDescriptions' => $chartDescriptions
         ]);
     }
 
@@ -220,12 +222,20 @@ class SlaDashboardController extends Controller
             }
 
             $shifts = ['Madrugada (0-6)' => 0, 'Manana (7-13)' => 0, 'Tarde (14-20)' => 0, 'Noche (21-23)' => 0];
+            $guardias = ['Guardia Dia (7-19)' => 0, 'Guardia Noche (19-7)' => 0];
+            $dayTypes = ['Laboral' => 0, 'Sabado' => 0, 'Domingo' => 0];
             foreach ($logs as $log) {
                 $h = $log->start_hour;
                 if ($h <= 6) $shifts['Madrugada (0-6)']++;
                 elseif ($h <= 13) $shifts['Manana (7-13)']++;
                 elseif ($h <= 20) $shifts['Tarde (14-20)']++;
                 else $shifts['Noche (21-23)']++;
+                if ($h >= 7 && $h < 19) $guardias['Guardia Dia (7-19)']++;
+                else $guardias['Guardia Noche (19-7)']++;
+                $dayNum = $log->started_at->format('N');
+                if ($dayNum <= 5) $dayTypes['Laboral']++;
+                elseif ($dayNum == 6) $dayTypes['Sabado']++;
+                else $dayTypes['Domingo']++;
             }
 
             $sortedDurations = collect($durations)->sort()->values()->toArray();
@@ -243,7 +253,7 @@ class SlaDashboardController extends Controller
                 'normalPoints' => $normalPoints,
                 'outlierPoints' => $outlierPoints,
                 'outliersTable' => $outliersList,
-                'shifts' => $shifts,
+                'shifts' => $shifts, 'guardias' => $guardias, 'dayTypes' => $dayTypes,
                 'boxplot' => $bp,
                 'boxplotChartData' => [$bp['min'], $bp['q1'], $bp['median'], $bp['q3'], $bp['max']]
             ];
@@ -274,7 +284,8 @@ class SlaDashboardController extends Controller
             'from' => $from,
             'to' => $to,
             'moduleFilter' => $module,
-            'modules' => self::MODULES
+            'modules' => self::MODULES,
+            'savedReports' => \App\Models\SavedReport::orderBy('created_at', 'desc')->limit(20)->get(),
         ]);
     }
     public function exportCsv(Request $request)
