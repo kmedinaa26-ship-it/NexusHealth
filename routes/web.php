@@ -403,4 +403,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/sla-dashboard', [App\Http\Controllers\SlaDashboardController::class, 'index'])->name('sla.dashboard');
     Route::post('/sla-dashboard/generate', [App\Http\Controllers\SlaDashboardController::class, 'generateMassData'])->name('sla.generate');
     Route::get('/sla-dashboard/export', [App\Http\Controllers\SlaDashboardController::class, 'exportCsv'])->name('sla.export');
+    Route::get('/sla-dashboard/report', [App\Http\Controllers\SlaDashboardController::class, 'report'])->name('sla.report');
 });
